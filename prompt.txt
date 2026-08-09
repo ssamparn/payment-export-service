@@ -1,0 +1,451 @@
+Story: Asynchronous Batch & Transaction Export Processing
+
+As a principal software engineer, senior backend engineer implement a scalable, resilient, asynchronous backend solution that allows users to request CSV exports for Payments (CT) and Direct Debits (DD), processes the request in the background through multiple scheduler stages, persists intermediate results, and generates a downloadable CSV file upon completion.
+The solution must be suitable for deployment in a horizontally scalable Cloud Foundry environment and support crash recovery, retries, idempotency, and distributed processing.
+
+POST /create-job
+        |
+        V
+    JOB TABLE
+ (Status=CREATED)
+        |
+        V
+BatchDiscoveryScheduler
+   (GetBatch SOAP)
+        |
+        V
+    BATCH TABLE
+        |
+        V
+TransactionDiscoveryScheduler
+   (GetTransactions SOAP)
+        |
+        V
+  TRANSACTION TABLE
+        |
+        V
+CsvGenerationScheduler
+    (Create CSV)
+        |
+        V
+    JOB TABLE
+(Status=CAN_BE_DOWNLOADED)
+        |
+        V
+GET /download-job/{jobId}
+
+1. Create Job API: Send a POST /create-job request containing the required information to the backend.
+
+- CSV - Betalingen / Payments -> Type = "CT"
+- CSV - Incasso's / Direct Debits -> Type = "DD"
+
+Request payload:
+
+When the customer presses Download, send a POST request containing:
+{
+  "dateFrom": "dd.mm.yyyy",
+  "dateTo": "dd.mm.yyyy",
+  "type": "CT | DD",
+  "accounts": [
+    {
+      "iban": "...",
+      "ccy": "..."
+    }
+  ]
+}
+
+2. Request Validation:
+The backend must validate:
+    - dateFrom is mandatory
+    - dateTo is mandatory
+    - dateFrom <= dateTo
+    - type must be CT or DD
+    - accounts list must not be empty
+    - iban is mandatory
+    - currency is mandatory
+    - date range must not exceed configurable maximum period
+    - JWT token must be valid
+
+3. Job Creation:
+   After successful validation:
+    - Create a Job record within the same transaction.
+    - Persist all request details.
+    - Extract userId from JWT.
+    - Store job ownership information.
+Initial Status: "CREATED"
+Response: 202 Accepted
+
+{
+  "jobId": "9b9a4fa7-2b55-4e71-b28e-d4ad5a9d9d55",
+  "status": "CREATED"
+}
+The backend must never return a 202 response before the Job record has been successfully persisted.
+
+4. Job Status Model:
+public enum JobStatus {
+    CREATED,
+    FETCHING_BATCHES,
+    BATCHES_FETCHED,
+    FETCHING_TRANSACTIONS,
+    TRANSACTIONS_FETCHED,
+    GENERATING_CSV,
+    CAN_BE_DOWNLOADED,
+    FAILED
+}
+
+5. Batch Status Model:
+public enum BatchStatus {
+    CREATED,
+    PROCESSING,
+    COMPLETED,
+    FAILED
+}
+
+6. Transaction Status Model:
+public enum TransactionStatus {
+    CREATED,
+    COMPLETED,
+    FAILED
+}
+
+7. Job Table Design:
+job_id UUID PK
+user_id VARCHAR
+job_type VARCHAR
+date_from DATE
+date_to DATE
+status VARCHAR
+total_batches INTEGER
+processed_batches INTEGER
+
+total_transactions INTEGER
+processed_transactions INTEGER
+last_batch_page_processed INTEGER
+
+retry_count INTEGER
+last_error TEXT
+csv_file_location VARCHAR
+
+created_at TIMESTAMP
+updated_at TIMESTAMP
+created_by VARCHAR
+version BIGINT
+
+Optimistic locking should be implemented using:
+@Version
+private Long version;
+
+8. Batch Table Design:
+JOB (1)
+ |
+ +--- (N) BATCH
+Unique Constraint: (job_id, encrypted_batch_id). This ensures idempotency.
+id BIGSERIAL
+job_id UUID FK
+encrypted_batch_id VARCHAR
+status VARCHAR
+batch_name
+batch_type
+page_number
+created_at
+updated_at
+
+9. Transaction Table Design:
+JOB
+ |
+ +--- BATCH
+          |
+          +--- TRANSACTION
+Unique Constraint: (batch_id, transaction_id). This prevents duplicate transaction insertion.
+
+10. Distributed Processing Requirements:
+The application will run across multiple Cloud Foundry instances.
+
+The solution must support:
+
+Horizontal scaling
+Concurrent job creation
+Concurrent scheduler execution
+Crash recovery
+
+Database work claiming must use:
+SELECT ...
+FOR UPDATE SKIP LOCKED
+to avoid multiple instances processing the same record simultaneously.
+
+11. Scheduler Infrastructure:
+ShedLock must be used only for coordination of scheduled tasks.
+ShedLock is not a job scheduler.
+
+Implementation:
+@Scheduled
+@SchedulerLock(...)
+
+Spring Scheduler will execute jobs.
+ShedLock ensures only one scheduler instance starts execution at a given time.
+
+12. Scheduler 1: BatchDiscoveryScheduler
+Purpose: Process Jobs in status: CREATED or FETCHING_BATCHES
+Processing Flow:
+Lock Job record.
+Set status: FETCHING_BATCHES
+Build GetBatchRequest.
+Call GetBatch SOAP service.
+Persist batches.
+Handle pagination.
+Update checkpoint.
+Continue until all pages fetched.
+Update status: BATCHES_FETCHED or FAILED.
+
+13. GetBatch SOAP Integration
+The backend must communicate with a dedicated SOAP microservice.
+GetBatchResponse getBatches(
+    GetBatchRequest request,
+    UserPrincipal principal
+);
+
+14. Authentication Strategy:
+The scheduler must not rely on the original JWT token because it may expire.
+Instead store:
+userId
+customerId
+required user context
+during Job creation. SOAP communication should use service-to-service authentication.
+Do not store access tokens for long-running jobs.
+
+15. Pagination:
+GetBatchRequest must support:
+private Integer pageNumber;
+private Integer pageSize;
+Scheduler 1 shall use:
+PageRequest(1,100)
+PageRequest(2,100)
+PageRequest(3,100)
+...
+until moreResultsAvailable == false.
+
+16. Recovery & Resume Capability:
+
+The system must survive:
+
+Pod restart
+VM restart
+Application crash
+Database failover
+Job checkpoints must be persisted.
+e.g: last_batch_page_processed.
+If the system crashes during page 45, upon recovery, the scheduler should resume from page 46, instead of page 1.
+
+17. Scheduler 2: TransactionDiscoveryScheduler
+Purpose: Process batches belonging to jobs in status: BATCHES_FETCHED or FETCHING_TRANSACTIONS
+Processing Flow:
+Pick next Batch.
+Mark Batch: status: PROCESSING
+Build TransactionsRequest.
+Call GetTransactions SOAP service.
+Persist transactions.
+Update Batch status: COMPLETED.
+Continue until all batches processed. When all batches complete: TRANSACTIONS_FETCHED
+
+18. GetTransactions SOAP Integration
+Transactions getTransactions(
+    TransactionsRequest request
+);
+The implementation must handle:
+
+timeouts
+connection failures
+SOAP faults
+malformed responses
+retry attempts
+
+The service will be implemented as a separate mock/stub Maven module.
+
+19. Retry Strategy
+All SOAP calls must support retries.
+Suggested: Maximum Retry Count: 3
+Persist:
+retry_count
+last_error
+If retries exhausted: FAILED status.
+
+20. Transaction Boundaries
+Large datasets must not be processed in a single transaction.
+Recommended:
+Page 1 -> Commit
+Page 2 -> Commit
+Page 3 -> Commit
+
+and
+
+Batch 1 -> Commit
+Batch 2 -> Commit
+Batch 3 -> Commit
+
+21. Scheduler 3:
+Name: CsvGenerationScheduler
+Purpose:
+Process Jobs with status: TRANSACTIONS_FETCHED
+Processing Flow:
+Set status: GENERATING_CSV
+Query all completed Batches.
+Query all completed Transactions.
+Generate CSV.
+Upload file.
+Persist location.
+Update Job status: CAN_BE_DOWNLOADED or FAILED
+
+22. CSV Storage:
+CSV files must not be stored as BLOBs inside PostgreSQL.
+
+Recommended: S3
+Store only: csv_file_location VARCHAR in Job Table.
+
+23. Job Completion Rule:
+A Job can only be marked as completed when:
+All Batches = COMPLETED
+AND
+All Transactions = COMPLETED
+AND
+CSV successfully generated
+
+Then:
+CAN_BE_DOWNLOADED
+
+24. Download Job API:
+GET /download-job/{jobId}
+Validation
+User must own the job.
+Job status must equal: CAN_BE_DOWNLOADED
+Otherwise: 409 Conflict or 404 Not Found
+
+25. Job Status API:
+Get Single Job: GET /get-job/{jobId}
+Response Example:
+{
+  "jobId": "...",
+  "status": "FETCHING_TRANSACTIONS",
+  "totalBatches": 150,
+  "processedBatches": 90,
+  "totalTransactions": 32500,
+  "processedTransactions": 21000,
+  "canBeDownloaded": false
+}
+
+26. Get All Jobs: GET /get-all-jobs
+Returns all jobs belonging to the authenticated user.
+
+27. Error Handling:
+
+The system must handle:
+
+SOAP faults
+Network failures
+Database failures
+Duplicate requests
+Scheduler crashes
+Application restarts
+Partial page persistence failures
+
+without data corruption.
+
+28. High Concurrency Requirements
+
+The solution must support:
+
+Multiple frontend requests simultaneously
+Multiple application instances
+Concurrent scheduler execution
+Recovery after failure
+
+The implementation shall use:
+
+Database transactions
+Optimistic locking
+FOR UPDATE SKIP LOCKED
+Idempotent writes
+ShedLock
+Retry mechanisms
+
+to ensure there are no race conditions, duplicate processing, or data inconsistencies across Job, Batch, and Transaction tables.
+
+---------------------------------------
+ALTERNATIVE VERSION OF THE SAME PROMPT:
+---------------------------------------
+
+1. Create Job API: Send a POST /create-job request containing the required information to the backend.
+
+2. Request Validation: The backend should validate the request payload, validate the JWT token, extract the authenticated user information, and ensure all mandatory fields are present and valid before processing.
+
+3. Job Creation: After successful validation, the backend should create a record in the Job List Table (PostgreSQL) within the same database transaction, persist the request details, user information, audit information, processing checkpoints, retry information, and initialize the Job status as "CREATED".
+
+4. After Job Creation, the backend should return a response 202 Accepted containing the generated jobId and initial job status, indicating that the request has been received and is being processed asynchronously.
+
+5. The Job List Table (PostgreSQL) should store the request details and all information required for tracking, recovery, retry, checkpointing, auditing, scheduling, progress monitoring, and CSV download management.
+
+6. Use Spring Scheduler together with SHEDLOCK. SHEDLOCK should be used to ensure that only one scheduler instance executes a scheduled task at a time across multiple application instances. The Job List Table should contain all required columns needed for job tracking, checkpointing, retry management, and scheduler execution.
+
+7. Since the application will be deployed in a Cloud Foundry environment, the backend should be designed to handle multiple concurrent requests, support horizontal scaling, distributed processing, crash recovery, and failover scenarios.
+
+8. Use database row-level locking (SELECT FOR UPDATE SKIP LOCKED) together with SHEDLOCK and optimistic locking to ensure that only one application instance processes a specific Job, Batch, or Transaction record at a time, preventing duplicate processing and race conditions.
+
+9. The backend should implement Scheduler 1 named BatchDiscoveryScheduler.
+
+10. BatchDiscoveryScheduler should fetch Jobs from the Job List Table with status "CREATED" or "FETCHING_BATCHES", claim them for processing, and update the Job status to "FETCHING_BATCHES".
+
+11. Scheduler 1 should make a SOAP call to an external service called GetBatch to fetch the required batch data based on the request parameters.
+e.g: GetBatchResponse getBatches(
+         GetBatchRequest getBatchRequest,
+         UserPrincipal userPrincipal
+     );
+
+12. The backend should be designed to communicate with the GetBatch SOAP service implemented in a separate stub (mock) Maven module and should properly handle SOAP faults, timeouts, network failures, invalid responses, retries, and exception scenarios.
+
+13. Based on the pageNumber and moreResultsAvailable fields in the GetBatchResponse, the backend should handle pagination automatically and fetch all available pages.
+
+14. Scheduler 1 should invoke GetBatch using page requests in chunks of 100 records, such as PageRequest(1,100), PageRequest(2,100), PageRequest(3,100), and continue until moreResultsAvailable = false.
+
+15. During in-flight processing of a Job, the backend should persist processing checkpoints such as the last successfully processed page, retry count, and processing state so that processing can resume from the last successful checkpoint in case of application restart, scheduler restart, or system failure.
+
+16. As each page of GetBatchResponse data is received, the corresponding Batch records should be stored in the Batch Table (2nd Table) and committed per page. Batch inserts should be idempotent to prevent duplicate records.
+
+17. Continue fetching and storing Batch data until all pages have been successfully retrieved. After successful completion, update the Job status to "BATCHES_FETCHED". If unrecoverable errors occur, update the status to "FAILED".
+
+18. The backend should implement Scheduler 2 named TransactionDiscoveryScheduler.
+
+19. TransactionDiscoveryScheduler should process Batch records associated with Jobs having status "BATCHES_FETCHED" or "FETCHING_TRANSACTIONS", update the Job status to "FETCHING_TRANSACTIONS", and process each Batch individually.
+
+20. Since a Batch contains multiple Transactions, Scheduler 2 should process Batch records one by one and invoke another SOAP service called GetTransactions to fetch Transaction data.
+e.g: Transactions getTransactions(
+         TransactionsRequest transactionsRequest
+     );
+
+21. TransactionsRequest should be constructed from Batch Table data, especially the Batch Identifier (encryptedBatchId / batchId). The relationship should be maintained as:
+Job (1) -> Batch (N)
+Batch (1) -> Transaction (N)
+
+22. The backend should be designed to communicate with the GetTransactions SOAP service implemented in a separate stub (mock) Maven module and should properly handle SOAP faults, retries, connection failures, timeouts, and exception scenarios.
+
+23. As Transaction data is received from GetTransactions, the data should be stored in the Transactions Table (3rd Table). Transaction inserts should be idempotent to prevent duplicate records.
+
+24. The backend should ensure data integrity across the Job List Table, Batch Table, and Transactions Table using database transactions, foreign key relationships, optimistic locking, unique constraints, retry mechanisms, and proper error handling.
+
+25. After all Batches and their corresponding Transactions have been successfully processed, update the Job status to "TRANSACTIONS_FETCHED". If unrecoverable failures occur, update the Job status to "FAILED".
+
+26. The backend should implement Scheduler 3 named CsvGenerationScheduler.
+
+27. CsvGenerationScheduler should query all completed Batch records and their corresponding completed Transaction records for Jobs having status "TRANSACTIONS_FETCHED" and update the Job status to "GENERATING_CSV".
+
+28. Create a CSV file containing both Batch and Transaction data, upload the generated file to the configured storage location, and store the file location in the Job List Table.
+
+29. After successful CSV generation and upload, update the Job status to "CAN_BE_DOWNLOADED".
+
+30. The backend should provide the following endpoints:
+    GET /get-job/{jobId} to retrieve the status and progress of a specific Job.
+    GET /get-all-jobs to retrieve all Jobs belonging to the authenticated user.
+    GET /download-job/{jobId} to download the generated CSV file.
+
+    The Job status response should include details such as current status, total batches processed, total transactions processed, failure information, and download availability. The download endpoint should only allow downloading when the Job status is "CAN_BE_DOWNLOADED" and the Job belongs to the authenticated user.
+
+31. The backend should be designed to support high concurrency, multiple Cloud Foundry instances, horizontal scaling, distributed scheduler execution, crash recovery, and failover scenarios.
+Appropriate locking mechanisms, transaction management, optimistic locking, row-level locking (FOR UPDATE SKIP LOCKED), SHEDLOCK, idempotent database operations, retry mechanisms, and robust error handling should be implemented to ensure data consistency, prevent race conditions, and avoid duplicate processing under heavy load.

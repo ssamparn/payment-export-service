@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: get-batch-soap-stub
