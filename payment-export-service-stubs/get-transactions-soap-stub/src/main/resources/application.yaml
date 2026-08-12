@@ -1,3 +1,6 @@
+server:
+  port: 7070
+
 spring:
   application:
     name: get-transactions-soap-stub

@@ -1,0 +1,12 @@
+payment-export:
+  create-job:
+    max-date-range-days: ${PAYMENT_EXPORT_MAX_DATE_RANGE_DAYS:31}
+
+security:
+  jwt:
+    signature-verification-url: ${PAYMENT_EXPORT_JWT_VERIFY_URL:http://localhost:8086/stub/jwt/verify-signature}
+
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration

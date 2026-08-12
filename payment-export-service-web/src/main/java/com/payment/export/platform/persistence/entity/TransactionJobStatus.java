@@ -1,6 +1,6 @@
 package com.payment.export.platform.persistence.entity;
 
-public enum TransactionStatus {
+public enum TransactionJobStatus {
     CREATED,
     COMPLETED,
     FAILED

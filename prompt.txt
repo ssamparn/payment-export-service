@@ -3,6 +3,20 @@ Story: Asynchronous Batch & Transaction Export Processing
 As a principal software engineer, senior backend engineer implement a scalable, resilient, asynchronous backend solution that allows users to request CSV exports for Payments (CT) and Direct Debits (DD), processes the request in the background through multiple scheduler stages, persists intermediate results, and generates a downloadable CSV file upon completion.
 The solution must be suitable for deployment in a horizontally scalable Cloud Foundry environment and support crash recovery, retries, idempotency, and distributed processing.
 
+Recommended Technology Stack:
+    - Spring Boot 4.1.0
+    - Java 25
+    - Spring Data JPA
+    - PostgreSQL
+    - ShedLock
+    - Spring Scheduler
+    - Resilience4j Retry
+    - Spring Retry
+    - AWS S3 SDK
+    - Flyway
+    - SOAP Client (JAX-WS/WebServiceTemplate)
+    - Micrometer
+
 POST /create-job
         |
         V
@@ -10,14 +24,14 @@ POST /create-job
  (Status=CREATED)
         |
         V
-BatchDiscoveryScheduler
+  GetBatchScheduler
    (GetBatch SOAP)
         |
         V
     BATCH TABLE
         |
         V
-TransactionDiscoveryScheduler
+  GetTransactionsScheduler
    (GetTransactions SOAP)
         |
         V
@@ -88,7 +102,7 @@ public enum JobStatus {
     BATCHES_FETCHED,
     FETCHING_TRANSACTIONS,
     TRANSACTIONS_FETCHED,
-    GENERATING_CSV,
+    GENERATING_CSV_LINK,
     CAN_BE_DOWNLOADED,
     FAILED
 }
@@ -369,6 +383,7 @@ Retry mechanisms
 
 to ensure there are no race conditions, duplicate processing, or data inconsistencies across Job, Batch, and Transaction tables.
 
+29. Feel free to add database columns if you feel it is important for an effective and resilient system design.
 ---------------------------------------
 ALTERNATIVE VERSION OF THE SAME PROMPT:
 ---------------------------------------
@@ -449,3 +464,5 @@ Batch (1) -> Transaction (N)
 
 31. The backend should be designed to support high concurrency, multiple Cloud Foundry instances, horizontal scaling, distributed scheduler execution, crash recovery, and failover scenarios.
 Appropriate locking mechanisms, transaction management, optimistic locking, row-level locking (FOR UPDATE SKIP LOCKED), SHEDLOCK, idempotent database operations, retry mechanisms, and robust error handling should be implemented to ensure data consistency, prevent race conditions, and avoid duplicate processing under heavy load.
+
+32. Feel free to add database columns if you feel it is important for an effective and resilient system design.

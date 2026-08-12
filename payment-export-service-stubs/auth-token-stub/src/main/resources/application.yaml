@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: auth-token-stub
+
+server:
+  port: ${AUTH_TOKEN_STUB_PORT:5050}
+
+security:
+  jwt:
+    hmac-secret: ${PAYMENT_EXPORT_JWT_SECRET:change-me-change-me-change-me-change-me}
+    default-expiry-seconds: ${AUTH_TOKEN_STUB_EXPIRY_SECONDS:3600}
+

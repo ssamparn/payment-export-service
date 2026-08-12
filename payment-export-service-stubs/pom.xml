@@ -23,6 +23,7 @@
     </properties>
 
     <modules>
+        <module>auth-token-stub</module>
         <module>get-batch-soap-stub</module>
         <module>get-transactions-soap-stub</module>
     </modules>
