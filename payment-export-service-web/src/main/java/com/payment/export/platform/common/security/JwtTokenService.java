@@ -1,40 +1,46 @@
 package com.payment.export.platform.common.security;
 
 import com.payment.export.platform.common.dto.JwtToken;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.json.JsonParser;
 import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 @Service
 public class JwtTokenService {
 
+    private static final JsonParser jsonParser = JsonParserFactory.getJsonParser();
+
     private final String signatureVerificationUrl;
-    private final JsonParser jsonParser;
+    private final Duration signatureVerificationTimeout;
     private final WebClient webClient;
 
     public JwtTokenService(@Value("${security.jwt.signature-verification-url}") String signatureVerificationUrl,
-                           WebClient.Builder webClientBuilder) {
+                           @Value("${security.jwt.signature-verification-timeout}") Duration signatureVerificationTimeout,
+                           @Qualifier("jwtVerificationWebClient") WebClient jwtVerificationWebClient) {
         this.signatureVerificationUrl = signatureVerificationUrl;
-        this.jsonParser = JsonParserFactory.getJsonParser();
-        this.webClient = webClientBuilder
-                .build();
+        this.signatureVerificationTimeout = signatureVerificationTimeout;
+        this.webClient = jwtVerificationWebClient;
     }
 
     public JwtToken parseAndValidate(String token) {
-        String normalizedToken = token == null ? null : token.trim();
-        if (normalizedToken == null || normalizedToken.isBlank()) {
-            throw new JwtValidationException("Missing JWT token");
-        }
+        String normalizedToken = normalizeToken(token);
 
         String[] parts = normalizedToken.split("\\.");
         if (parts.length != 3) {
@@ -52,18 +58,10 @@ public class JwtTokenService {
         Map<String, Object> claims = parseJsonPart(parts[1]);
         validateExpiration(claims.get("exp"));
 
-        String userId = asString(claims.get("userId"));
-        String customerName = asString(claims.get("customerName"));
+        String userId = requiredFirstNonBlankClaim(claims, "JWT userId claim is missing", "userId", "sub");
+        String customerName = requiredFirstNonBlankClaim(claims, "JWT customerName claim is missing", "customerName");
         String customerAgreementId = asString(claims.get("customerAgreementId"));
         String subject = asString(claims.get("sub"));
-
-        userId = firstNonBlank(userId, subject);
-        if (userId == null || userId.isBlank()) {
-            throw new JwtValidationException("JWT userId claim is missing");
-        }
-        if (customerName == null || customerName.isBlank()) {
-            throw new JwtValidationException("JWT customerName claim is missing");
-        }
 
         UUID tokenId = parseUuid(asString(claims.get("jti")));
 
@@ -72,29 +70,32 @@ public class JwtTokenService {
 
     private void verifySignature(String encodedHeader, String encodedPayload, String encodedSignature) {
         try {
-            String responseBody = webClient.post()
+            Boolean valid = webClient.post()
                     .uri(signatureVerificationUrl)
-                    .bodyValue(Map.of(
-                            "encodedHeader", encodedHeader,
-                            "encodedPayload", encodedPayload,
-                            "encodedSignature", encodedSignature
+                    .bodyValue(new SignatureVerifyRequest(
+                            encodedHeader,
+                            encodedPayload,
+                            encodedSignature
                     ))
                     .retrieve()
-                    .bodyToMono(String.class)
-                    .block(Duration.ofSeconds(3));
+                    .bodyToMono(SignatureVerifyResponse.class)
+                    .timeout(signatureVerificationTimeout)
+                    .map(SignatureVerifyResponse::valid)
+                    .filter(Boolean.TRUE::equals)
+                    .switchIfEmpty(Mono.error(new JwtValidationException("JWT signature verification endpoint returned empty response")))
+                    .onErrorMap(WebClientResponseException.class, ex ->
+                            new JwtValidationException("JWT signature verification endpoint rejected request: HTTP "
+                                    + ex.getStatusCode().value(), ex)
+                    )
+                    .onErrorMap(TimeoutException.class, ex ->
+                            new JwtValidationException("JWT signature verification timed out", ex)
+                    )
+                    .blockOptional()
+                    .orElseThrow(() -> new JwtValidationException("JWT signature verification endpoint returned empty response"));
 
-            if (responseBody == null || responseBody.isBlank()) {
-                throw new JwtValidationException("JWT signature verification endpoint returned empty response");
-            }
-
-            Map<String, Object> payload = jsonParser.parseMap(responseBody);
-            Object valid = payload.get("valid");
-            if (!(valid instanceof Boolean isValid) || !isValid) {
+            if (!valid) {
                 throw new JwtValidationException("JWT signature validation failed");
             }
-        } catch (WebClientResponseException ex) {
-            throw new JwtValidationException("JWT signature verification endpoint rejected request: HTTP "
-                    + ex.getStatusCode().value(), ex);
         } catch (JwtValidationException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -131,27 +132,48 @@ public class JwtTokenService {
     }
 
     private String asString(Object value) {
-        return value == null ? null : value.toString();
+        return Objects.toString(value, null);
     }
 
-    private String firstNonBlank(String... values) {
-        for (String value : values) {
-            if (value != null && !value.isBlank()) {
-                return value;
-            }
-        }
-        return null;
+    private String normalizeToken(String token) {
+        return firstNonBlank(token == null ? null : token.trim())
+                .orElseThrow(() -> new JwtValidationException("Missing JWT token"));
+    }
+
+    private String requiredFirstNonBlankClaim(Map<String, Object> claims, String errorMessage, String... claimNames) {
+        return Arrays.stream(claimNames)
+                .map(claims::get)
+                .map(this::asString)
+                .filter(value -> value != null && !value.isBlank())
+                .findFirst()
+                .orElseThrow(() -> new JwtValidationException(errorMessage));
+    }
+
+    private Optional<String> firstNonBlank(String... values) {
+        return Arrays.stream(values)
+                .filter(StringUtils::isNotBlank)
+                .findFirst();
     }
 
     private UUID parseUuid(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException ignored) {
-            return null;
-        }
+        return Optional.ofNullable(value)
+                .filter(s -> !s.isBlank())
+                .map(v -> {
+                    try {
+                        return UUID.fromString(v);
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                })
+                .orElse(null);
+    }
+
+    private record SignatureVerifyRequest(String encodedHeader,
+                                          String encodedPayload,
+                                          String encodedSignature) {
+    }
+
+    private record SignatureVerifyResponse(Boolean valid) {
     }
 }
 

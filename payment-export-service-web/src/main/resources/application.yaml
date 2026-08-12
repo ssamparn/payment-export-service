@@ -5,6 +5,7 @@ payment-export:
 security:
   jwt:
     signature-verification-url: ${PAYMENT_EXPORT_JWT_VERIFY_URL:http://localhost:5050/stub/jwt/verify-signature}
+    signature-verification-timeout: ${PAYMENT_EXPORT_JWT_VERIFY_TIMEOUT:5s}
 
 spring:
   application:
