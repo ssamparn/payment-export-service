@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.payment.export.platform.common.security.JwtUserContextInterceptor.JWT_TOKEN_REQUEST_ATTRIBUTE;
+
 @RestController
-@RequestMapping
+@RequestMapping("/api/v1/jobs")
 public class JobController {
 
     private final CreateJobService createJobService;
@@ -25,8 +27,7 @@ public class JobController {
 
     @PostMapping("/create-job")
     public ResponseEntity<CreateJobResponse> createJob(@Valid @RequestBody CreateJobRequest request,
-                                                       @RequestAttribute(JwtUserContextInterceptor.JWT_TOKEN_REQUEST_ATTRIBUTE)
-                                                       JwtToken jwtToken) {
+                                                       @RequestAttribute(JWT_TOKEN_REQUEST_ATTRIBUTE) JwtToken jwtToken) {
         CreateJobResponse response = createJobService.createJob(request, jwtToken);
         return ResponseEntity.accepted().body(response);
     }

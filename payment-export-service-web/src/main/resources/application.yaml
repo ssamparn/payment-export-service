@@ -4,9 +4,29 @@ payment-export:
 
 security:
   jwt:
-    signature-verification-url: ${PAYMENT_EXPORT_JWT_VERIFY_URL:http://localhost:8086/stub/jwt/verify-signature}
+    signature-verification-url: ${PAYMENT_EXPORT_JWT_VERIFY_URL:http://localhost:5050/stub/jwt/verify-signature}
 
 spring:
+  application:
+    name: payment-export-service-web
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:payment_export_service_db}
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:password}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
   flyway:
     enabled: true
     locations: classpath:db/migration
+    validate-migration-naming: true
+    clean-disabled: true
+    default-schema: public
+    schemas: public
+    create-schemas: true
