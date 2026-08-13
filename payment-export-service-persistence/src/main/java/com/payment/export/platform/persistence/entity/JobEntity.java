@@ -4,10 +4,12 @@ import com.payment.export.platform.domain.dto.PaymentType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -15,6 +17,8 @@ import jakarta.persistence.Version;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -91,6 +95,9 @@ public class JobEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BatchEntity> batches = new ArrayList<>();
 
     @PrePersist
     void prePersist() {
@@ -266,6 +273,44 @@ public class JobEntity {
 
     public Long getVersion() {
         return version;
+    }
+
+    public List<BatchEntity> getBatches() {
+        return batches;
+    }
+
+    public void setBatches(List<BatchEntity> batches) {
+        for (BatchEntity batch : this.batches) {
+            batch.setJob(null);
+        }
+        this.batches.clear();
+
+        if (batches == null) {
+            return;
+        }
+
+        for (BatchEntity batch : batches) {
+            addBatch(batch);
+        }
+    }
+
+    public void addBatch(BatchEntity batch) {
+        if (batch == null || this.batches.contains(batch)) {
+            return;
+        }
+
+        this.batches.add(batch);
+        batch.setJob(this);
+    }
+
+    public void removeBatch(BatchEntity batch) {
+        if (batch == null) {
+            return;
+        }
+
+        if (this.batches.remove(batch)) {
+            batch.setJob(null);
+        }
     }
 }
 
