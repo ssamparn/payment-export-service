@@ -4,32 +4,25 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.payment.export.platform</groupId>
-        <artifactId>payment-export-service-stubs</artifactId>
+        <artifactId>payment-export-service</artifactId>
         <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>auth-token-stub</artifactId>
-    <name>Auth Token - Stub</name>
+    <artifactId>payment-export-service-messaging</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Payment Export Service - Messaging</name>
 
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>
