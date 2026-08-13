@@ -45,12 +45,8 @@ public class JobEntity {
     private LocalDate dateTo;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "account_ibans", nullable = false, columnDefinition = "TEXT[]")
-    private String[] accountIbans;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "account_currency_codes", nullable = false, columnDefinition = "TEXT[]")
-    private String[] accountCurrencyCodes;
+    @Column(name = "accounts", nullable = false, columnDefinition = "TEXT[]")
+    private String[] accounts;
 
     @Column(name = "jwt_token", nullable = false, columnDefinition = "TEXT")
     private String jwtToken;
@@ -148,20 +144,12 @@ public class JobEntity {
         this.paymentType = paymentType;
     }
 
-    public String[] getAccountIbans() {
-        return accountIbans;
+    public String[] getAccounts() {
+        return accounts;
     }
 
-    public void setAccountIbans(String[] accountIbans) {
-        this.accountIbans = accountIbans;
-    }
-
-    public String[] getAccountCurrencyCodes() {
-        return accountCurrencyCodes;
-    }
-
-    public void setAccountCurrencyCodes(String[] accountCurrencyCodes) {
-        this.accountCurrencyCodes = accountCurrencyCodes;
+    public void setAccounts(String[] accounts) {
+        this.accounts = accounts;
     }
 
     public String getJwtToken() {

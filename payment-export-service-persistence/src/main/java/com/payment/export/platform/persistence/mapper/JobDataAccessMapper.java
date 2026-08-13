@@ -22,8 +22,7 @@ public class JobDataAccessMapper {
         jobEntity.setDateFrom(job.dateFrom());
         jobEntity.setDateTo(job.dateTo());
         jobEntity.setPaymentType(job.paymentType());
-        jobEntity.setAccountIbans(job.ibans());
-        jobEntity.setAccountCurrencyCodes(job.currencyCodes());
+        jobEntity.setAccounts(job.accountReferences());
         jobEntity.setJwtToken(job.rawToken());
         jobEntity.setStatus(JobStatus.CREATED);
         jobEntity.setTotalBatches(0);

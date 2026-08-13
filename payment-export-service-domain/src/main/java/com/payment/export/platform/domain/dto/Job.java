@@ -45,15 +45,9 @@ public record Job(LocalDate dateFrom,
         createdBy = trimToNull(createdBy);
     }
 
-    public String[] ibans() {
+    public String[] accountReferences() {
         return accounts.stream()
-                .map(JobAccount::iban)
-                .toArray(String[]::new);
-    }
-
-    public String[] currencyCodes() {
-        return accounts.stream()
-                .map(JobAccount::currencyCode)
+                .map(JobAccount::asPersistenceValue)
                 .toArray(String[]::new);
     }
 
@@ -78,6 +72,10 @@ public record Job(LocalDate dateFrom,
 
             iban = iban.trim();
             currencyCode = currencyCode.trim().toUpperCase();
+        }
+
+        public String asPersistenceValue() {
+            return iban + ":" + currencyCode;
         }
     }
 }
