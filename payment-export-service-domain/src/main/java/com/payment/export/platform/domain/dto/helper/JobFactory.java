@@ -20,8 +20,7 @@ public class JobFactory {
         return new Job(
                 request.dateFrom(),
                 request.dateTo(),
-                request.type(),
-                request.type(),
+                request.paymentType(),
                 request.accounts().stream()
                         .map(this::toJobAccount)
                         .toList(),

@@ -21,7 +21,6 @@ public class JobDataAccessMapper {
         jobEntity.setCreatedBy(job.createdBy() == null ? job.userId() : job.createdBy());
         jobEntity.setDateFrom(job.dateFrom());
         jobEntity.setDateTo(job.dateTo());
-        jobEntity.setType(job.type());
         jobEntity.setPaymentType(job.paymentType());
         jobEntity.setAccountIbans(job.ibans());
         jobEntity.setAccountCurrencyCodes(job.currencyCodes());

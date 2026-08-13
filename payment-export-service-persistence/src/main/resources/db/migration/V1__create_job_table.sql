@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS job (
     user_id VARCHAR(128) NOT NULL,
     customer_name VARCHAR(256) NOT NULL,
     customer_agreement_id VARCHAR(128),
-    job_type VARCHAR(8) NOT NULL,
     payment_type VARCHAR(8) NOT NULL,
     date_from DATE NOT NULL,
     date_to DATE NOT NULL,
@@ -22,7 +21,18 @@ CREATE TABLE IF NOT EXISTS job (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by VARCHAR(128) NOT NULL,
-    version BIGINT NOT NULL DEFAULT 0
+    version BIGINT NOT NULL DEFAULT 0,
+    CONSTRAINT uk_job_job_id UNIQUE (job_id),
+    CONSTRAINT chk_job_status CHECK (status IN ('CREATED', 'FETCHING_BATCHES', 'BATCHES_FETCHED', 'FETCHING_TRANSACTIONS', 'TRANSACTIONS_FETCHED', 'GENERATING_CSV_LINK', 'CAN_BE_DOWNLOADED', 'FAILED')),
+    CONSTRAINT chk_job_payment_type_ct_dd CHECK (payment_type IN ('CT', 'DD')),
+    CONSTRAINT chk_job_date_range CHECK (date_from <= date_to),
+    CONSTRAINT chk_job_account_ibans_non_empty CHECK (array_length(account_ibans, 1) > 0),
+    CONSTRAINT chk_job_account_currency_codes_non_empty CHECK (array_length(account_currency_codes, 1) > 0),
+    CONSTRAINT chk_job_total_batches_non_negative CHECK (total_batches >= 0),
+    CONSTRAINT chk_job_processed_batches_non_negative CHECK (processed_batches >= 0),
+    CONSTRAINT chk_job_total_transactions_non_negative CHECK (total_transactions >= 0),
+    CONSTRAINT chk_job_processed_transactions_non_negative CHECK (processed_transactions >= 0),
+    CONSTRAINT chk_job_retry_count_non_negative CHECK (retry_count >= 0)
 );
 
 CREATE INDEX IF NOT EXISTS idx_job_status ON job (status);

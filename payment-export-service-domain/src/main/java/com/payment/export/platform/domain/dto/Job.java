@@ -6,8 +6,7 @@ import java.util.UUID;
 
 public record Job(LocalDate dateFrom,
                   LocalDate dateTo,
-                  String type,
-                  String paymentType,
+                  PaymentType paymentType,
                   List<Job.JobAccount> accounts,
                   String userId,
                   String customerName,
@@ -24,8 +23,8 @@ public record Job(LocalDate dateFrom,
         if (dateTo == null) {
             throw new IllegalArgumentException("dateTo must not be null");
         }
-        if (type == null || type.isBlank()) {
-            throw new IllegalArgumentException("type must not be blank");
+        if (paymentType == null) {
+            throw new IllegalArgumentException("paymentType must not be null");
         }
         if (accounts == null || accounts.isEmpty()) {
             throw new IllegalArgumentException("accounts must not be empty");
@@ -37,8 +36,6 @@ public record Job(LocalDate dateFrom,
             throw new IllegalArgumentException("customerName must not be blank");
         }
 
-        type = type.trim().toUpperCase();
-        paymentType = normalizePaymentType(type);
         accounts = List.copyOf(accounts);
         userId = userId.trim();
         customerName = customerName.trim();
@@ -60,12 +57,6 @@ public record Job(LocalDate dateFrom,
                 .toArray(String[]::new);
     }
 
-    private static String normalizePaymentType(String value) {
-        if ("CT".equals(value) || "DD".equals(value)) {
-            return value;
-        }
-        throw new IllegalArgumentException("type must be CT or DD");
-    }
 
     private static String trimToNull(String value) {
         if (value == null) {

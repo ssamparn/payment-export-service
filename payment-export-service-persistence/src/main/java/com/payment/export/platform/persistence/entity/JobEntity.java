@@ -1,5 +1,6 @@
 package com.payment.export.platform.persistence.entity;
 
+import com.payment.export.platform.domain.dto.PaymentType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
@@ -33,17 +34,15 @@ public class JobEntity {
     @Column(name = "customer_agreement_id")
     private String customerAgreementId;
 
-    @Column(name = "job_type", nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false)
+    private PaymentType paymentType;
 
     @Column(name = "date_from", nullable = false)
     private LocalDate dateFrom;
 
     @Column(name = "date_to", nullable = false)
     private LocalDate dateTo;
-
-    @Column(name = "payment_type", nullable = false)
-    private String paymentType;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "account_ibans", nullable = false, columnDefinition = "TEXT[]")
@@ -141,19 +140,11 @@ public class JobEntity {
         this.dateTo = dateTo;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getPaymentType() {
+    public PaymentType getPaymentType() {
         return paymentType;
     }
 
-    public void setPaymentType(String paymentType) {
+    public void setPaymentType(PaymentType paymentType) {
         this.paymentType = paymentType;
     }
 
