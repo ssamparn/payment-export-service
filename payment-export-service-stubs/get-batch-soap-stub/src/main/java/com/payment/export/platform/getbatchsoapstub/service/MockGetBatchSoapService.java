@@ -12,6 +12,8 @@ import java.util.List;
 @Service
 public class MockGetBatchSoapService {
 
+    private static final int TOTAL_AVAILABLE_BATCHES = 250;
+
     public GetBatchRpy getBatches(GetBatchReq request) {
         String normalizedJobId = request.getJobId() == null || request.getJobId().isBlank()
                 ? "UNKNOWN-JOB"
@@ -25,16 +27,21 @@ public class MockGetBatchSoapService {
         response.setJobId(normalizedJobId);
         response.setPage(normalizedPage);
         response.setPageSize(normalizedPageSize);
+        response.setMoreResultsAvailable(hasMoreResultsAvailable(normalizedPage, normalizedPageSize));
         response.setBatches(createBatches(normalizedJobId, normalizedPaymentType, normalizedPage, normalizedPageSize));
         return response;
     }
 
     private List<BatchRpy> createBatches(String jobId, PaymentType paymentType, int page, int pageSize) {
-        List<BatchRpy> batches = new ArrayList<>(pageSize);
         int startIndex = ((page - 1) * pageSize) + 1;
+        if (startIndex > TOTAL_AVAILABLE_BATCHES) {
+            return List.of();
+        }
 
-        for (int i = 0; i < pageSize; i++) {
-            int sequence = startIndex + i;
+        int endIndex = Math.min(startIndex + pageSize - 1, TOTAL_AVAILABLE_BATCHES);
+        List<BatchRpy> batches = new ArrayList<>(endIndex - startIndex + 1);
+
+        for (int sequence = startIndex; sequence <= endIndex; sequence++) {
             BatchRpy batch = new BatchRpy();
             batch.setBatchId("INT-" + jobId + "-" + String.format("%04d", sequence));
             batch.setIban("DE893704004405320130" + String.format("%02d", sequence % 100));
@@ -43,6 +50,10 @@ public class MockGetBatchSoapService {
             batches.add(batch);
         }
         return batches;
+    }
+
+    private boolean hasMoreResultsAvailable(int page, int pageSize) {
+        return (long) page * pageSize < TOTAL_AVAILABLE_BATCHES;
     }
 }
 

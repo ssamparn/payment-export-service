@@ -7,6 +7,7 @@ Mock SOAP service for batch metadata retrieval.
 - SOAP endpoint at `/ws`
 - Request root element: `GetBatchReq`
 - Response root element: `GetBatchRpy`
+- Response includes `moreResultsAvailable` for pagination continuation/stop decisions.
 - Batch records include:
   - `batchId` (this is the internal batch id used by the application)
   - `iban`
@@ -34,5 +35,3 @@ The module is configured for port `6060` in `src/main/resources/application.yaml
   </soapenv:Body>
 </soapenv:Envelope>
 ```
-
-## Example SOAP Response

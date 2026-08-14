@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "GetBatchRpy", propOrder = {"requestId", "jobId", "page", "pageSize", "batches"})
+@XmlType(name = "GetBatchRpy", propOrder = {"requestId", "jobId", "page", "pageSize", "moreResultsAvailable", "batches"})
 @XmlRootElement(name = "GetBatchRpy", namespace = GetBatchSoapConstants.NAMESPACE_URI)
 public class GetBatchRpy {
 
@@ -26,6 +26,9 @@ public class GetBatchRpy {
 
     @XmlElement(required = true)
     private Integer pageSize;
+
+    @XmlElement(required = true)
+    private boolean moreResultsAvailable;
 
     @XmlElement(name = "batch", required = true)
     private List<BatchRpy> batches = new ArrayList<>();
@@ -60,6 +63,14 @@ public class GetBatchRpy {
 
     public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public boolean isMoreResultsAvailable() {
+        return moreResultsAvailable;
+    }
+
+    public void setMoreResultsAvailable(boolean moreResultsAvailable) {
+        this.moreResultsAvailable = moreResultsAvailable;
     }
 
     public List<BatchRpy> getBatches() {

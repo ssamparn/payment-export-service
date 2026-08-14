@@ -13,16 +13,16 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "GetBatchReq", namespace = GetBatchSoapConstants.NAMESPACE_URI)
 public class GetBatchReq {
 
-    @XmlElement(required = true)
+    @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private String jobId;
 
-    @XmlElement(required = true)
+    @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private PaymentType paymentType;
 
-    @XmlElement(required = true)
+    @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private Integer page;
 
-    @XmlElement(required = true)
+    @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private Integer pageSize;
 
     public String getJobId() {
