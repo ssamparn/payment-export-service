@@ -25,12 +25,13 @@
     </properties>
 
     <modules>
-        <module>payment-export-service-application</module>
-        <module>payment-export-service-container</module>
         <module>payment-export-service-stubs</module>
-        <module>payment-export-service-persistence</module>
         <module>payment-export-service-domain</module>
+        <module>payment-export-service-application</module>
+        <module>payment-export-service-persistence</module>
+        <module>payment-export-service-soap</module>
         <module>payment-export-service-messaging</module>
+        <module>payment-export-service-container</module>
     </modules>
 
     <dependencyManagement>
@@ -53,6 +54,21 @@
             <dependency>
                 <groupId>com.payment.export.platform</groupId>
                 <artifactId>payment-export-service-messaging</artifactId>
+                <version>${internal-module.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.payment.export.platform</groupId>
+                <artifactId>payment-export-service-soap</artifactId>
+                <version>${internal-module.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.payment.export.platform</groupId>
+                <artifactId>get-batch-soap-stub</artifactId>
+                <version>${internal-module.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.payment.export.platform</groupId>
+                <artifactId>get-transactions-soap-stub</artifactId>
                 <version>${internal-module.version}</version>
             </dependency>
             <dependency>

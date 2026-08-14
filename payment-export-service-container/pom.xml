@@ -20,6 +20,10 @@
         </dependency>
         <dependency>
             <groupId>com.payment.export.platform</groupId>
+            <artifactId>payment-export-service-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.payment.export.platform</groupId>
             <artifactId>payment-export-service-application</artifactId>
         </dependency>
         <dependency>
@@ -29,6 +33,10 @@
         <dependency>
             <groupId>com.payment.export.platform</groupId>
             <artifactId>payment-export-service-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.payment.export.platform</groupId>
+            <artifactId>payment-export-service-soap</artifactId>
         </dependency>
     </dependencies>
 

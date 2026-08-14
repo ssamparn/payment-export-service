@@ -1,6 +1,14 @@
 payment-export:
   create-job:
     max-date-range-days: ${PAYMENT_EXPORT_MAX_DATE_RANGE_DAYS:31}
+  soap:
+    get-batch:
+      uri: ${PAYMENT_EXPORT_GET_BATCH_SOAP_URI:http://localhost:6060/ws}
+  scheduler:
+    get-batch:
+      fixed-delay: ${PAYMENT_EXPORT_GET_BATCH_SCHEDULER_DELAY:60000}
+      max-jobs-per-run: ${PAYMENT_EXPORT_GET_BATCH_MAX_JOBS_PER_RUN:10}
+      page-size: ${PAYMENT_EXPORT_GET_BATCH_PAGE_SIZE:100}
 
 security:
   jwt:
