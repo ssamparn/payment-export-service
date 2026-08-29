@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>com.payment.export.platform</groupId>
-            <artifactId>payment-export-service-soap</artifactId>
+            <artifactId>payment-export-service-integration</artifactId>
         </dependency>
     </dependencies>
 

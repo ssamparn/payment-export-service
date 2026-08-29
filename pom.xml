@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -29,7 +29,7 @@
         <module>payment-export-service-domain</module>
         <module>payment-export-service-application</module>
         <module>payment-export-service-persistence</module>
-        <module>payment-export-service-soap</module>
+        <module>payment-export-service-integration</module>
         <module>payment-export-service-messaging</module>
         <module>payment-export-service-container</module>
     </modules>
@@ -58,7 +58,7 @@
             </dependency>
             <dependency>
                 <groupId>com.payment.export.platform</groupId>
-                <artifactId>payment-export-service-soap</artifactId>
+                <artifactId>payment-export-service-integration</artifactId>
                 <version>${internal-module.version}</version>
             </dependency>
             <dependency>

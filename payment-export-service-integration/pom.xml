@@ -8,10 +8,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>payment-export-service-soap</artifactId>
+    <artifactId>payment-export-service-integration</artifactId>
     <packaging>jar</packaging>
 
-    <name>Payment Export Service - Soap</name>
+    <name>Payment Export Service - Integration</name>
 
     <dependencies>
         <dependency>

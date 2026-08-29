@@ -2,8 +2,8 @@ package com.payment.export.platform.application.scheduler;
 
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchJobRepository;
-import com.payment.export.platform.domain.ports.output.soap.GetBatchSoapService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
