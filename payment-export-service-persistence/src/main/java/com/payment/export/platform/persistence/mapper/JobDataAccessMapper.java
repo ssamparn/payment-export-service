@@ -49,7 +49,7 @@ public class JobDataAccessMapper {
             case FETCHING_BATCHES, BATCHES_FETCHED, FETCHING_TRANSACTIONS, TRANSACTIONS_FETCHED, GENERATING_CSV_LINK ->
                     BusinessStatus.IN_PROGRESS;
             case CAN_BE_DOWNLOADED -> BusinessStatus.COMPLETED;
-            case FAILED -> BusinessStatus.FAILED;
+            case BATCHES_FETCH_FAILED, TRANSACTION_FETCH_FAILED, GENERATING_CSV_FAILED, FAILED -> BusinessStatus.FAILED;
         };
     }
 }

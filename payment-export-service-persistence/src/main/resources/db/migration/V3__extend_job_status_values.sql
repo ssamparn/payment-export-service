@@ -1,0 +1,20 @@
+ALTER TABLE job
+DROP CONSTRAINT IF EXISTS chk_job_status;
+
+ALTER TABLE job
+ADD CONSTRAINT chk_job_status CHECK (
+    status IN (
+        'CREATED',
+        'FETCHING_BATCHES',
+        'BATCHES_FETCHED',
+        'BATCHES_FETCH_FAILED',
+        'FETCHING_TRANSACTIONS',
+        'TRANSACTIONS_FETCHED',
+        'TRANSACTION_FETCH_FAILED',
+        'GENERATING_CSV_LINK',
+        'GENERATING_CSV_FAILED',
+        'CAN_BE_DOWNLOADED',
+        'FAILED'
+    )
+);
+
