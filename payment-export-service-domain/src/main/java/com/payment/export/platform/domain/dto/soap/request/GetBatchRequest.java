@@ -2,8 +2,10 @@ package com.payment.export.platform.domain.dto.soap.request;
 
 import com.payment.export.platform.domain.dto.PaymentType;
 import com.payment.export.platform.domain.dto.web.request.Account;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 public record GetBatchRequest(PaymentType paymentType,
                               List<Account> accounts,
@@ -14,10 +16,10 @@ public record GetBatchRequest(PaymentType paymentType,
         if (paymentType == null) {
             throw new IllegalArgumentException("paymentType must not be null");
         }
-        if (accounts == null || accounts.isEmpty()) {
+        if (CollectionUtils.isEmpty(accounts)) {
             throw new IllegalArgumentException("accounts must not be empty");
         }
-        if (accounts.stream().anyMatch(java.util.Objects::isNull)) {
+        if (accounts.stream().anyMatch(Objects::isNull)) {
             throw new IllegalArgumentException("accounts must not contain null entries");
         }
         if (page < 1) {
