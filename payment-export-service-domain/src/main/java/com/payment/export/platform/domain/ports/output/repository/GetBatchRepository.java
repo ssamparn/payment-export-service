@@ -6,7 +6,7 @@ import com.payment.export.platform.domain.dto.response.GetBatchResponse;
 import java.util.List;
 import java.util.UUID;
 
-public interface GetBatchJobRepository {
+public interface GetBatchRepository {
 
     List<GetBatchRequest> findCreatedJobsForBatchFetch(int maxJobs, int pageSize);
 

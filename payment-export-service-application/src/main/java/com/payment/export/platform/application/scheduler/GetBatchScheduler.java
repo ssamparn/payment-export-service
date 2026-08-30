@@ -3,7 +3,7 @@ package com.payment.export.platform.application.scheduler;
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
-import com.payment.export.platform.domain.ports.output.repository.GetBatchJobRepository;
+import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,16 +13,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class GetBatchScheduler {
 
-	private final GetBatchJobRepository getBatchJobRepository;
+	private final GetBatchRepository getBatchRepository;
 	private final GetBatchSoapService getBatchSoapService;
 	private final int maxJobsPerRun;
 	private final int soapPageSize;
 
-	public GetBatchScheduler(GetBatchJobRepository getBatchJobRepository,
+	public GetBatchScheduler(GetBatchRepository getBatchRepository,
 							 GetBatchSoapService getBatchSoapService,
 							 @Value("${payment-export.scheduler.get-batch.max-jobs-per-run:10}") int maxJobsPerRun,
 							 @Value("${payment-export.scheduler.get-batch.page-size:100}") int soapPageSize) {
-		this.getBatchJobRepository = getBatchJobRepository;
+		this.getBatchRepository = getBatchRepository;
 		this.getBatchSoapService = getBatchSoapService;
 		this.maxJobsPerRun = Math.max(1, maxJobsPerRun);
 		this.soapPageSize = Math.max(1, soapPageSize);
@@ -30,29 +30,29 @@ public class GetBatchScheduler {
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-batch.fixed-delay:60000}")
 	public void fetchBatches() {
-		for (GetBatchRequest initialRequest : getBatchJobRepository.findCreatedJobsForBatchFetch(maxJobsPerRun, soapPageSize)) {
+		for (GetBatchRequest initialRequest : getBatchRepository.findCreatedJobsForBatchFetch(maxJobsPerRun, soapPageSize)) {
 			processJob(initialRequest);
 		}
 	}
 
 	private void processJob(GetBatchRequest initialRequest) {
 		try {
-			getBatchJobRepository.markJobAsFetchingBatches(initialRequest.jobId());
+			getBatchRepository.markJobAsFetchingBatches(initialRequest.jobId());
 
 			GetBatchRequest currentRequest = initialRequest;
 			boolean moreResultsAvailable;
 			do {
 				GetBatchResponse response = getBatchSoapService.call(currentRequest);
-				getBatchJobRepository.saveBatchPage(response);
+				getBatchRepository.saveBatchPage(response);
 
 				moreResultsAvailable = response.moreResultsAvailable();
 				currentRequest = currentRequest.nextPage();
 			} while (moreResultsAvailable);
 
-			getBatchJobRepository.markJobAsBatchesFetched(initialRequest.jobId());
+			getBatchRepository.markJobAsBatchesFetched(initialRequest.jobId());
 		} catch (Exception exception) {
 			log.error("Failed to fetch batches for job {}", initialRequest.jobId(), exception);
-			getBatchJobRepository.markJobAsFailed(initialRequest.jobId(), exception.getMessage());
+			getBatchRepository.markJobAsFailed(initialRequest.jobId(), exception.getMessage());
 		}
 	}
 }

@@ -2,7 +2,7 @@ package com.payment.export.platform.persistence.adapter;
 
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
-import com.payment.export.platform.domain.ports.output.repository.GetBatchJobRepository;
+import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import com.payment.export.platform.persistence.entity.BatchEntity;
 import com.payment.export.platform.persistence.entity.JobEntity;
 import com.payment.export.platform.persistence.entity.JobStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class GetBatchJobRepositoryImpl implements GetBatchJobRepository {
+public class GetBatchRepositoryImpl implements GetBatchRepository {
 
     private static final int MAX_ERROR_LENGTH = 4000;
 
@@ -27,10 +27,10 @@ public class GetBatchJobRepositoryImpl implements GetBatchJobRepository {
     private final GetBatchRequestDataAccessMapper getBatchRequestDataAccessMapper;
     private final BatchDataAccessMapper batchDataAccessMapper;
 
-    public GetBatchJobRepositoryImpl(JobJpaRepository jobJpaRepository,
-                                     BatchJpaRepository batchJpaRepository,
-                                     GetBatchRequestDataAccessMapper getBatchRequestDataAccessMapper,
-                                     BatchDataAccessMapper batchDataAccessMapper) {
+    public GetBatchRepositoryImpl(JobJpaRepository jobJpaRepository,
+                                  BatchJpaRepository batchJpaRepository,
+                                  GetBatchRequestDataAccessMapper getBatchRequestDataAccessMapper,
+                                  BatchDataAccessMapper batchDataAccessMapper) {
         this.jobJpaRepository = jobJpaRepository;
         this.batchJpaRepository = batchJpaRepository;
         this.getBatchRequestDataAccessMapper = getBatchRequestDataAccessMapper;

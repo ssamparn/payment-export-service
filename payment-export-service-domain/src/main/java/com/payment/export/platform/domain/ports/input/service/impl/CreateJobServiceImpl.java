@@ -6,7 +6,7 @@ import com.payment.export.platform.domain.dto.request.CreateJobRequest;
 import com.payment.export.platform.domain.dto.response.CreateJobResponse;
 import com.payment.export.platform.domain.dto.security.JwtToken;
 import com.payment.export.platform.domain.ports.input.service.CreateJobService;
-import com.payment.export.platform.domain.ports.output.repository.JobRepository;
+import com.payment.export.platform.domain.ports.output.repository.JobDetailsRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,14 +15,14 @@ import java.time.temporal.ChronoUnit;
 @Service
 public class CreateJobServiceImpl implements CreateJobService {
 
-    private final JobRepository jobRepository;
+    private final JobDetailsRepository jobDetailsRepository;
     private final JobFactory jobFactory;
     private final long maxDateRangeDays;
 
-    public CreateJobServiceImpl(JobRepository jobRepository,
+    public CreateJobServiceImpl(JobDetailsRepository jobDetailsRepository,
                                 JobFactory jobFactory,
                                 @Value("${payment-export.create-job.max-date-range-days:31}") long maxDateRangeDays) {
-        this.jobRepository = jobRepository;
+        this.jobDetailsRepository = jobDetailsRepository;
         this.jobFactory = jobFactory;
         this.maxDateRangeDays = maxDateRangeDays;
     }
@@ -35,6 +35,6 @@ public class CreateJobServiceImpl implements CreateJobService {
         }
 
         Job job = jobFactory.from(request, jwtToken);
-        return jobRepository.save(job);
+        return jobDetailsRepository.save(job);
     }
 }

@@ -1,8 +1,8 @@
 package com.payment.export.platform.application.rest.controller;
 
-import com.payment.export.platform.domain.dto.security.JwtToken;
 import com.payment.export.platform.domain.dto.request.CreateJobRequest;
 import com.payment.export.platform.domain.dto.response.CreateJobResponse;
+import com.payment.export.platform.domain.dto.security.JwtToken;
 import com.payment.export.platform.domain.ports.input.service.CreateJobService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class JobController {
     public ResponseEntity<CreateJobResponse> createJob(@Valid @RequestBody CreateJobRequest request,
                                                        @RequestAttribute(JWT_TOKEN_REQUEST_ATTRIBUTE) JwtToken jwtToken) {
         CreateJobResponse response = createJobService.createJob(request, jwtToken);
-        return ResponseEntity.accepted().body(new CreateJobResponse(response.jobId(), response.status()));
+        return ResponseEntity.accepted().body(response);
     }
 }
 
