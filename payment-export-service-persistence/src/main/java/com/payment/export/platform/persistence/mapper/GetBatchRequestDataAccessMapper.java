@@ -1,7 +1,7 @@
 package com.payment.export.platform.persistence.mapper;
 
-import com.payment.export.platform.domain.dto.web.request.Account;
 import com.payment.export.platform.domain.dto.soap.request.GetBatchRequest;
+import com.payment.export.platform.domain.dto.web.request.Account;
 import com.payment.export.platform.persistence.entity.JobEntity;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,7 @@ public class GetBatchRequestDataAccessMapper {
         return new GetBatchRequest(
                 jobEntity.getPaymentType(),
                 mapAccounts(jobEntity.getAccounts()),
-                1,
+                Math.max(1, jobEntity.getLastBatchPageProcessed() + 1),
                 pageSize
         );
     }

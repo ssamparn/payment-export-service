@@ -46,10 +46,17 @@ public class JobDataAccessMapper {
 
         return switch (status) {
             case CREATED -> BusinessStatus.CREATED;
-            case FETCHING_BATCHES, BATCHES_FETCHED, FETCHING_TRANSACTIONS, TRANSACTIONS_FETCHED, GENERATING_CSV_LINK ->
+            case FETCHING_BATCHES,
+                 BATCHES_FETCHED,
+                 BATCHES_FETCH_FAILED,
+                 FETCHING_TRANSACTIONS,
+                 TRANSACTIONS_FETCHED,
+                 TRANSACTION_FETCH_FAILED,
+                 GENERATING_CSV_LINK,
+                 GENERATING_CSV_FAILED ->
                     BusinessStatus.IN_PROGRESS;
             case CAN_BE_DOWNLOADED -> BusinessStatus.COMPLETED;
-            case BATCHES_FETCH_FAILED, TRANSACTION_FETCH_FAILED, GENERATING_CSV_FAILED, FAILED -> BusinessStatus.FAILED;
+            case FAILED -> BusinessStatus.FAILED;
         };
     }
 }

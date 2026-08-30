@@ -9,6 +9,12 @@ payment-export:
       fixed-delay: ${PAYMENT_EXPORT_GET_BATCH_SCHEDULER_DELAY:60000}
       max-jobs-per-run: ${PAYMENT_EXPORT_GET_BATCH_MAX_JOBS_PER_RUN:10}
       page-size: ${PAYMENT_EXPORT_GET_BATCH_PAGE_SIZE:100}
+      max-job-retry-attempts: ${PAYMENT_EXPORT_GET_BATCH_MAX_JOB_RETRY_ATTEMPTS:5}
+      soap-call-retry-attempts: ${PAYMENT_EXPORT_GET_BATCH_SOAP_CALL_RETRY_ATTEMPTS:3}
+      initial-retry-backoff: ${PAYMENT_EXPORT_GET_BATCH_INITIAL_RETRY_BACKOFF:PT1S}
+      retry-backoff-multiplier: ${PAYMENT_EXPORT_GET_BATCH_RETRY_BACKOFF_MULTIPLIER:2.0}
+      max-retry-backoff: ${PAYMENT_EXPORT_GET_BATCH_MAX_RETRY_BACKOFF:PT10S}
+      stale-fetch-timeout: ${PAYMENT_EXPORT_GET_BATCH_STALE_FETCH_TIMEOUT:PT15M}
 
 security:
   jwt:
