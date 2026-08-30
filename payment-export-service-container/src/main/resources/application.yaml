@@ -4,6 +4,8 @@ payment-export:
   soap:
     get-batch:
       uri: ${PAYMENT_EXPORT_GET_BATCH_SOAP_URI:http://localhost:6060/ws}
+    get-transactions:
+      uri: ${PAYMENT_EXPORT_GET_TRANSACTIONS_SOAP_URI:http://localhost:7070/ws}
   scheduler:
     get-batch:
       fixed-delay: ${PAYMENT_EXPORT_GET_BATCH_SCHEDULER_DELAY:60000}
