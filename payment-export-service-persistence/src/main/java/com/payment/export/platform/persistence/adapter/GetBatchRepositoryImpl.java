@@ -1,5 +1,6 @@
 package com.payment.export.platform.persistence.adapter;
 
+import com.payment.export.platform.domain.dto.request.GetBatchJob;
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
@@ -39,9 +40,12 @@ public class GetBatchRepositoryImpl implements GetBatchRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GetBatchRequest> findCreatedJobsForBatchFetch(int maxJobs, int pageSize) {
+    public List<GetBatchJob> findCreatedJobsForBatchFetch(int maxJobs, int pageSize) {
         return jobJpaRepository.findByStatusOrderByCreatedAtAsc(JobStatus.CREATED, PageRequest.of(0, maxJobs)).stream()
-                .map(jobEntity -> getBatchRequestDataAccessMapper.jobEntityToGetBatchRequest(jobEntity, pageSize))
+                .map(jobEntity -> new GetBatchJob(
+                        jobEntity.getJobId(),
+                        getBatchRequestDataAccessMapper.jobEntityToGetBatchRequest(jobEntity, pageSize)
+                ))
                 .toList();
     }
 
@@ -56,8 +60,8 @@ public class GetBatchRepositoryImpl implements GetBatchRepository {
 
     @Override
     @Transactional
-    public void saveBatchPage(GetBatchResponse response) {
-        JobEntity jobEntity = findJobWithLock(response.jobId());
+    public void saveBatchPage(UUID jobId, GetBatchResponse response) {
+        JobEntity jobEntity = findJobWithLock(jobId);
         List<BatchEntity> batchEntities = batchDataAccessMapper.toBatchEntities(jobEntity, response.batches());
         batchJpaRepository.saveAll(batchEntities);
 

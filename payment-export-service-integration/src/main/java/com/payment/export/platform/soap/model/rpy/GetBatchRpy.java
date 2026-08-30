@@ -11,15 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "GetBatchRpy", propOrder = {"requestId", "jobId", "page", "pageSize", "moreResultsAvailable", "batches"})
+@XmlType(name = "GetBatchRpy", propOrder = {"requestId", "page", "pageSize", "moreResultsAvailable", "batches"})
 @XmlRootElement(name = "GetBatchRpy", namespace = GetBatchSoapConstants.NAMESPACE_URI)
 public class GetBatchRpy {
 
     @XmlElement(required = true)
     private String requestId;
-
-    @XmlElement(required = true)
-    private String jobId;
 
     @XmlElement(required = true)
     private Integer page;
@@ -41,13 +38,6 @@ public class GetBatchRpy {
         this.requestId = requestId;
     }
 
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
 
     public Integer getPage() {
         return page;

@@ -24,9 +24,11 @@ public class GetBatchSoapWebServiceConfig {
     @Bean
     public Jaxb2Marshaller jaxb2Marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setPackagesToScan("com.payment.export.platform.getbatchsoapstub.model");
-        marshaller.setPackagesToScan("com.payment.export.platform.getbatchsoapstub.model.req");
-        marshaller.setPackagesToScan("com.payment.export.platform.getbatchsoapstub.model.rpy");
+        marshaller.setPackagesToScan(
+                "com.payment.export.platform.getbatchsoapstub.model",
+                "com.payment.export.platform.getbatchsoapstub.model.req",
+                "com.payment.export.platform.getbatchsoapstub.model.rpy"
+        );
         return marshaller;
     }
 }

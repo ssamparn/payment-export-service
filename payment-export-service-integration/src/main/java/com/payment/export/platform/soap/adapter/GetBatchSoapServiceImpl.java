@@ -25,6 +25,6 @@ public class GetBatchSoapServiceImpl implements GetBatchSoapService {
     public GetBatchResponse call(GetBatchRequest request) {
         GetBatchReq soapRequest = getBatchSoapMapper.toSoapRequest(request);
         GetBatchRpy getBatchRpy = getBatchSoapClient.send(soapRequest);
-        return getBatchSoapMapper.toDomainResponse(request.jobId(), getBatchRpy);
+        return getBatchSoapMapper.toDomainResponse(getBatchRpy);
     }
 }

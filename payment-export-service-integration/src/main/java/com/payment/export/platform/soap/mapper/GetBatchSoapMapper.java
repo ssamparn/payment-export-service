@@ -3,38 +3,46 @@ package com.payment.export.platform.soap.mapper;
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
 import com.payment.export.platform.soap.model.PaymentType;
+import com.payment.export.platform.soap.model.req.AccountReq;
 import com.payment.export.platform.soap.model.req.GetBatchReq;
 import com.payment.export.platform.soap.model.rpy.BatchRpy;
 import com.payment.export.platform.soap.model.rpy.GetBatchRpy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class GetBatchSoapMapper {
 
     public GetBatchReq toSoapRequest(GetBatchRequest request) {
         GetBatchReq soapRequest = new GetBatchReq();
-        soapRequest.setJobId(request.soapJobId());
         soapRequest.setPaymentType(PaymentType.valueOf(request.paymentType().name()));
         soapRequest.setPage(request.page());
         soapRequest.setPageSize(request.pageSize());
+        soapRequest.setAccounts(request.accounts().stream()
+                .map(this::toSoapAccount)
+                .toList());
         return soapRequest;
     }
 
-    public GetBatchResponse toDomainResponse(UUID jobId, GetBatchRpy soapResponse) {
+    public GetBatchResponse toDomainResponse(GetBatchRpy soapResponse) {
         List<GetBatchResponse.BatchDetails> batches = soapResponse.getBatches().stream()
                 .map(this::toDomainBatch)
                 .toList();
 
         return new GetBatchResponse(
-                jobId,
                 normalizePositiveNumber(soapResponse.getPage()),
                 normalizePositiveNumber(soapResponse.getPageSize()),
                 soapResponse.isMoreResultsAvailable(),
                 batches
         );
+    }
+
+    private AccountReq toSoapAccount(com.payment.export.platform.domain.dto.request.Account account) {
+        AccountReq soapAccount = new AccountReq();
+        soapAccount.setIban(account.iban());
+        soapAccount.setCurrencyCode(account.currencyCode());
+        return soapAccount;
     }
 
     private GetBatchResponse.BatchDetails toDomainBatch(BatchRpy batch) {

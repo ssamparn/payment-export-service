@@ -3,18 +3,13 @@ package com.payment.export.platform.domain.dto.response;
 import com.payment.export.platform.domain.dto.PaymentType;
 
 import java.util.List;
-import java.util.UUID;
 
-public record GetBatchResponse(UUID jobId,
-                               int page,
+public record GetBatchResponse(int page,
                                int pageSize,
                                boolean moreResultsAvailable,
                                List<BatchDetails> batches) {
 
     public GetBatchResponse {
-        if (jobId == null) {
-            throw new IllegalArgumentException("jobId must not be null");
-        }
         if (page < 1) {
             throw new IllegalArgumentException("page must be greater than or equal to 1");
         }

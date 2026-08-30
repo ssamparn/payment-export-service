@@ -38,7 +38,7 @@ public class JobFactory {
         if (account == null) {
             throw new IllegalArgumentException("Account must not be null");
         }
-        return new Job.JobAccount(account.iban(), account.ccy());
+        return new Job.JobAccount(account.iban(), account.currencyCode());
     }
 }
 

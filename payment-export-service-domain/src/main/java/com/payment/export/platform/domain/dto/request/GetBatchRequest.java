@@ -2,23 +2,22 @@ package com.payment.export.platform.domain.dto.request;
 
 import com.payment.export.platform.domain.dto.PaymentType;
 
-import java.util.UUID;
+import java.util.List;
 
-public record GetBatchRequest(UUID jobId,
-                              String soapJobId,
-                              PaymentType paymentType,
+public record GetBatchRequest(PaymentType paymentType,
+                              List<Account> accounts,
                               int page,
                               int pageSize) {
 
     public GetBatchRequest {
-        if (jobId == null) {
-            throw new IllegalArgumentException("jobId must not be null");
-        }
-        if (soapJobId == null || soapJobId.isBlank()) {
-            throw new IllegalArgumentException("soapJobId must not be blank");
-        }
         if (paymentType == null) {
             throw new IllegalArgumentException("paymentType must not be null");
+        }
+        if (accounts == null || accounts.isEmpty()) {
+            throw new IllegalArgumentException("accounts must not be empty");
+        }
+        if (accounts.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("accounts must not contain null entries");
         }
         if (page < 1) {
             throw new IllegalArgumentException("page must be greater than or equal to 1");
@@ -27,11 +26,11 @@ public record GetBatchRequest(UUID jobId,
             throw new IllegalArgumentException("pageSize must be greater than or equal to 1");
         }
 
-        soapJobId = soapJobId.trim();
+        accounts = List.copyOf(accounts);
     }
 
     public GetBatchRequest nextPage() {
-        return new GetBatchRequest(jobId, soapJobId, paymentType, page + 1, pageSize);
+        return new GetBatchRequest(paymentType, accounts, page + 1, pageSize);
     }
 }
 

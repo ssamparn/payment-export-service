@@ -1,6 +1,7 @@
 package com.payment.export.platform.getbatchsoapstub.service;
 
 import com.payment.export.platform.getbatchsoapstub.model.rpy.BatchRpy;
+import com.payment.export.platform.getbatchsoapstub.model.req.AccountReq;
 import com.payment.export.platform.getbatchsoapstub.model.req.GetBatchReq;
 import com.payment.export.platform.getbatchsoapstub.model.rpy.GetBatchRpy;
 import com.payment.export.platform.getbatchsoapstub.model.PaymentType;
@@ -15,24 +16,21 @@ public class MockGetBatchSoapService {
     private static final int TOTAL_AVAILABLE_BATCHES = 250;
 
     public GetBatchRpy getBatches(GetBatchReq request) {
-        String normalizedJobId = request.getJobId() == null || request.getJobId().isBlank()
-                ? "UNKNOWN-JOB"
-                : request.getJobId().trim();
         PaymentType normalizedPaymentType = request.getPaymentType() == null ? PaymentType.CT : request.getPaymentType();
         int normalizedPage = Math.max(1, request.getPage() == null ? 1 : request.getPage());
         int normalizedPageSize = Math.max(1, request.getPageSize() == null ? 1 : request.getPageSize());
+        AccountReq normalizedAccount = resolvePrimaryAccount(request.getAccounts());
 
         GetBatchRpy response = new GetBatchRpy();
-        response.setRequestId("REQ-" + normalizedJobId + "-P" + normalizedPage + "-S" + normalizedPageSize);
-        response.setJobId(normalizedJobId);
+        response.setRequestId("REQ-" + normalizedPaymentType + "-" + normalizedAccount.getCurrencyCode() + "-P" + normalizedPage + "-S" + normalizedPageSize);
         response.setPage(normalizedPage);
         response.setPageSize(normalizedPageSize);
         response.setMoreResultsAvailable(hasMoreResultsAvailable(normalizedPage, normalizedPageSize));
-        response.setBatches(createBatches(normalizedJobId, normalizedPaymentType, normalizedPage, normalizedPageSize));
+        response.setBatches(createBatches(normalizedAccount, normalizedPaymentType, normalizedPage, normalizedPageSize));
         return response;
     }
 
-    private List<BatchRpy> createBatches(String jobId, PaymentType paymentType, int page, int pageSize) {
+    private List<BatchRpy> createBatches(AccountReq account, PaymentType paymentType, int page, int pageSize) {
         int startIndex = ((page - 1) * pageSize) + 1;
         if (startIndex > TOTAL_AVAILABLE_BATCHES) {
             return List.of();
@@ -43,13 +41,42 @@ public class MockGetBatchSoapService {
 
         for (int sequence = startIndex; sequence <= endIndex; sequence++) {
             BatchRpy batch = new BatchRpy();
-            batch.setBatchId("INT-" + jobId + "-" + String.format("%04d", sequence));
-            batch.setIban("DE893704004405320130" + String.format("%02d", sequence % 100));
-            batch.setCurrencyCode("EUR");
+            batch.setBatchId("INT-" + account.getCurrencyCode() + "-" + String.format("%04d", sequence));
+            batch.setIban(account.getIban());
+            batch.setCurrencyCode(account.getCurrencyCode());
             batch.setPaymentType(paymentType);
             batches.add(batch);
         }
         return batches;
+    }
+
+    private AccountReq resolvePrimaryAccount(List<AccountReq> accounts) {
+        if (accounts == null || accounts.isEmpty()) {
+            AccountReq defaultAccount = new AccountReq();
+            defaultAccount.setIban("DE89370400440532013000");
+            defaultAccount.setCurrencyCode("EUR");
+            return defaultAccount;
+        }
+
+        AccountReq account = accounts.get(0);
+        if (account == null) {
+            AccountReq fallbackAccount = new AccountReq();
+            fallbackAccount.setIban("DE89370400440532013000");
+            fallbackAccount.setCurrencyCode("EUR");
+            return fallbackAccount;
+        }
+
+        String iban = account.getIban() == null || account.getIban().isBlank()
+                ? "DE89370400440532013000"
+                : account.getIban().trim();
+        String currencyCode = account.getCurrencyCode() == null || account.getCurrencyCode().isBlank()
+                ? "EUR"
+                : account.getCurrencyCode().trim().toUpperCase();
+
+        AccountReq normalized = new AccountReq();
+        normalized.setIban(iban);
+        normalized.setCurrencyCode(currencyCode);
+        return normalized;
     }
 
     private boolean hasMoreResultsAvailable(int page, int pageSize) {

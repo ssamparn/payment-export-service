@@ -8,13 +8,13 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "GetBatchReq", propOrder = {"jobId", "paymentType", "page", "pageSize"})
+@XmlType(name = "GetBatchReq", propOrder = {"paymentType", "page", "pageSize", "accounts"})
 @XmlRootElement(name = "GetBatchReq", namespace = GetBatchSoapConstants.NAMESPACE_URI)
 public class GetBatchReq {
-
-    @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
-    private String jobId;
 
     @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private PaymentType paymentType;
@@ -25,13 +25,8 @@ public class GetBatchReq {
     @XmlElement(required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
     private Integer pageSize;
 
-    public String getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(String jobId) {
-        this.jobId = jobId;
-    }
+    @XmlElement(name = "account", required = true, namespace = GetBatchSoapConstants.NAMESPACE_URI)
+    private List<AccountReq> accounts = new ArrayList<>();
 
     public PaymentType getPaymentType() {
         return paymentType;
@@ -55,5 +50,13 @@ public class GetBatchReq {
 
     public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public List<AccountReq> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<AccountReq> accounts) {
+        this.accounts = accounts;
     }
 }

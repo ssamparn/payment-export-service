@@ -1,5 +1,6 @@
 package com.payment.export.platform.application.scheduler;
 
+import com.payment.export.platform.domain.dto.request.GetBatchJob;
 import com.payment.export.platform.domain.dto.request.GetBatchRequest;
 import com.payment.export.platform.domain.dto.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
@@ -30,29 +31,31 @@ public class GetBatchScheduler {
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-batch.fixed-delay:60000}")
 	public void fetchBatches() {
-		for (GetBatchRequest initialRequest : getBatchRepository.findCreatedJobsForBatchFetch(maxJobsPerRun, soapPageSize)) {
-			processJob(initialRequest);
+		for (GetBatchJob batchJob : getBatchRepository.findCreatedJobsForBatchFetch(maxJobsPerRun, soapPageSize)) {
+			processJob(batchJob);
 		}
 	}
 
-	private void processJob(GetBatchRequest initialRequest) {
+	private void processJob(GetBatchJob batchJob) {
+		GetBatchRequest initialRequest = batchJob.request();
+		var jobId = batchJob.jobId();
 		try {
-			getBatchRepository.markJobAsFetchingBatches(initialRequest.jobId());
+			getBatchRepository.markJobAsFetchingBatches(jobId);
 
 			GetBatchRequest currentRequest = initialRequest;
 			boolean moreResultsAvailable;
 			do {
 				GetBatchResponse response = getBatchSoapService.call(currentRequest);
-				getBatchRepository.saveBatchPage(response);
+				getBatchRepository.saveBatchPage(jobId, response);
 
 				moreResultsAvailable = response.moreResultsAvailable();
 				currentRequest = currentRequest.nextPage();
 			} while (moreResultsAvailable);
 
-			getBatchRepository.markJobAsBatchesFetched(initialRequest.jobId());
+			getBatchRepository.markJobAsBatchesFetched(jobId);
 		} catch (Exception exception) {
-			log.error("Failed to fetch batches for job {}", initialRequest.jobId(), exception);
-			getBatchRepository.markJobAsFailed(initialRequest.jobId(), exception.getMessage());
+			log.error("Failed to fetch batches for job {}", jobId, exception);
+			getBatchRepository.markJobAsFailed(jobId, exception.getMessage());
 		}
 	}
 }
