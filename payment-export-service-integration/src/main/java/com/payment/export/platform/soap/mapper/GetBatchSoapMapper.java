@@ -1,7 +1,8 @@
 package com.payment.export.platform.soap.mapper;
 
-import com.payment.export.platform.domain.dto.request.GetBatchRequest;
-import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.soap.request.GetBatchRequest;
+import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.web.request.Account;
 import com.payment.export.platform.soap.model.PaymentType;
 import com.payment.export.platform.soap.model.req.AccountReq;
 import com.payment.export.platform.soap.model.req.GetBatchReq;
@@ -38,7 +39,7 @@ public class GetBatchSoapMapper {
         );
     }
 
-    private AccountReq toSoapAccount(com.payment.export.platform.domain.dto.request.Account account) {
+    private AccountReq toSoapAccount(Account account) {
         AccountReq soapAccount = new AccountReq();
         soapAccount.setIban(account.iban());
         soapAccount.setCurrencyCode(account.currencyCode());

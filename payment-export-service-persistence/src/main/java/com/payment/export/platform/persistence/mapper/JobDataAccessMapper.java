@@ -1,8 +1,8 @@
 package com.payment.export.platform.persistence.mapper;
 
 import com.payment.export.platform.domain.dto.Job;
-import com.payment.export.platform.domain.dto.response.BusinessStatus;
-import com.payment.export.platform.domain.dto.response.CreateJobResponse;
+import com.payment.export.platform.domain.dto.web.response.BusinessStatus;
+import com.payment.export.platform.domain.dto.web.response.CreateJobResponse;
 import com.payment.export.platform.persistence.entity.JobEntity;
 import com.payment.export.platform.persistence.entity.JobStatus;
 import org.springframework.stereotype.Component;

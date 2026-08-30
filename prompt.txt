@@ -59,11 +59,11 @@ When the customer presses Download, send a POST request containing:
 {
   "dateFrom": "dd.mm.yyyy",
   "dateTo": "dd.mm.yyyy",
-  "type": "CT | DD",
+  "paymentType": "CT | DD",
   "accounts": [
     {
       "iban": "...",
-      "ccy": "..."
+      "currencyCode": "..."
     }
   ]
 }

@@ -1,7 +1,7 @@
 package com.payment.export.platform.persistence.adapter;
 
 import com.payment.export.platform.domain.dto.Job;
-import com.payment.export.platform.domain.dto.response.CreateJobResponse;
+import com.payment.export.platform.domain.dto.web.response.CreateJobResponse;
 import com.payment.export.platform.domain.ports.output.repository.JobDetailsRepository;
 import com.payment.export.platform.persistence.entity.JobEntity;
 import com.payment.export.platform.persistence.mapper.JobDataAccessMapper;

@@ -1,4 +1,4 @@
-package com.payment.export.platform.domain.dto.request;
+package com.payment.export.platform.domain.dto.soap.request;
 
 import java.util.UUID;
 

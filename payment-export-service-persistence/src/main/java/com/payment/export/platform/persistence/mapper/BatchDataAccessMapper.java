@@ -1,6 +1,6 @@
 package com.payment.export.platform.persistence.mapper;
 
-import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.persistence.entity.BatchEntity;
 import com.payment.export.platform.persistence.entity.BatchJobStatus;
 import com.payment.export.platform.persistence.entity.JobEntity;

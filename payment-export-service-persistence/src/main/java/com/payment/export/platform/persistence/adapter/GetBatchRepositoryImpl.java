@@ -1,8 +1,7 @@
 package com.payment.export.platform.persistence.adapter;
 
-import com.payment.export.platform.domain.dto.request.GetBatchJob;
-import com.payment.export.platform.domain.dto.request.GetBatchRequest;
-import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.soap.request.GetBatchJob;
+import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import com.payment.export.platform.persistence.entity.BatchEntity;
 import com.payment.export.platform.persistence.entity.JobEntity;

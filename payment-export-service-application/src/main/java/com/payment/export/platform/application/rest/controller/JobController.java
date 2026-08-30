@@ -1,7 +1,7 @@
 package com.payment.export.platform.application.rest.controller;
 
-import com.payment.export.platform.domain.dto.request.CreateJobRequest;
-import com.payment.export.platform.domain.dto.response.CreateJobResponse;
+import com.payment.export.platform.domain.dto.web.request.CreateJobRequest;
+import com.payment.export.platform.domain.dto.web.response.CreateJobResponse;
 import com.payment.export.platform.domain.dto.security.JwtToken;
 import com.payment.export.platform.domain.ports.input.service.CreateJobService;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.payment.export.platform.domain.dto.response;
+package com.payment.export.platform.domain.dto.soap.response;
 
 import com.payment.export.platform.domain.dto.PaymentType;
 

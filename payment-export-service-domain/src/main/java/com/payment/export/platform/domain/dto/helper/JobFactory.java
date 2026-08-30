@@ -1,8 +1,8 @@
 package com.payment.export.platform.domain.dto.helper;
 
 import com.payment.export.platform.domain.dto.Job;
-import com.payment.export.platform.domain.dto.request.Account;
-import com.payment.export.platform.domain.dto.request.CreateJobRequest;
+import com.payment.export.platform.domain.dto.web.request.Account;
+import com.payment.export.platform.domain.dto.web.request.CreateJobRequest;
 import com.payment.export.platform.domain.dto.security.JwtToken;
 import org.springframework.stereotype.Component;
 

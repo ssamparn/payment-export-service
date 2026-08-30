@@ -1,4 +1,4 @@
-package com.payment.export.platform.domain.dto.response;
+package com.payment.export.platform.domain.dto.web.response;
 
 import java.util.UUID;
 

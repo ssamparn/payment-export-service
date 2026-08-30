@@ -1,5 +1,7 @@
 package com.payment.export.platform.domain.dto;
 
+import com.payment.export.platform.domain.exception.DomainValidationException;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -18,22 +20,25 @@ public record Job(LocalDate dateFrom,
 
     public Job {
         if (dateFrom == null) {
-            throw new IllegalArgumentException("dateFrom must not be null");
+            throw new DomainValidationException("dateFrom must not be null");
         }
         if (dateTo == null) {
-            throw new IllegalArgumentException("dateTo must not be null");
+            throw new DomainValidationException("dateTo must not be null");
+        }
+        if (dateFrom.isAfter(dateTo)) {
+            throw new DomainValidationException("dateFrom must be less than or equal to dateTo");
         }
         if (paymentType == null) {
-            throw new IllegalArgumentException("paymentType must not be null");
+            throw new DomainValidationException("paymentType must not be null");
         }
         if (accounts == null || accounts.isEmpty()) {
-            throw new IllegalArgumentException("accounts must not be empty");
+            throw new DomainValidationException("accounts must not be empty");
         }
         if (userId == null || userId.isBlank()) {
-            throw new IllegalArgumentException("userId must not be blank");
+            throw new DomainValidationException("userId must not be blank");
         }
         if (customerName == null || customerName.isBlank()) {
-            throw new IllegalArgumentException("customerName must not be blank");
+            throw new DomainValidationException("customerName must not be blank");
         }
 
         accounts = List.copyOf(accounts);
@@ -64,10 +69,10 @@ public record Job(LocalDate dateFrom,
 
         public JobAccount {
             if (iban == null || iban.isBlank()) {
-                throw new IllegalArgumentException("Account IBAN must not be blank");
+                throw new DomainValidationException("Account IBAN must not be blank");
             }
             if (currencyCode == null || currencyCode.isBlank()) {
-                throw new IllegalArgumentException("Account currency code must not be blank");
+                throw new DomainValidationException("Account currency code must not be blank");
             }
 
             iban = iban.trim();

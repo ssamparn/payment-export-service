@@ -1,8 +1,8 @@
 package com.payment.export.platform.application.scheduler;
 
-import com.payment.export.platform.domain.dto.request.GetBatchJob;
-import com.payment.export.platform.domain.dto.request.GetBatchRequest;
-import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.soap.request.GetBatchJob;
+import com.payment.export.platform.domain.dto.soap.request.GetBatchRequest;
+import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import lombok.extern.slf4j.Slf4j;

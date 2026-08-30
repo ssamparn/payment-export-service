@@ -2,8 +2,8 @@ package com.payment.export.platform.domain.ports.input.service.impl;
 
 import com.payment.export.platform.domain.dto.Job;
 import com.payment.export.platform.domain.dto.helper.JobFactory;
-import com.payment.export.platform.domain.dto.request.CreateJobRequest;
-import com.payment.export.platform.domain.dto.response.CreateJobResponse;
+import com.payment.export.platform.domain.dto.web.request.CreateJobRequest;
+import com.payment.export.platform.domain.dto.web.response.CreateJobResponse;
 import com.payment.export.platform.domain.dto.security.JwtToken;
 import com.payment.export.platform.domain.ports.input.service.CreateJobService;
 import com.payment.export.platform.domain.ports.output.repository.JobDetailsRepository;

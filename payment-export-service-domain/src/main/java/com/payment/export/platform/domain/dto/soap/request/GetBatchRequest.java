@@ -1,6 +1,7 @@
-package com.payment.export.platform.domain.dto.request;
+package com.payment.export.platform.domain.dto.soap.request;
 
 import com.payment.export.platform.domain.dto.PaymentType;
+import com.payment.export.platform.domain.dto.web.request.Account;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.payment.export.platform.soap.adapter;
 
-import com.payment.export.platform.domain.dto.request.GetBatchRequest;
-import com.payment.export.platform.domain.dto.response.GetBatchResponse;
+import com.payment.export.platform.domain.dto.soap.request.GetBatchRequest;
+import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
 import com.payment.export.platform.soap.client.GetBatchSoapClient;
 import com.payment.export.platform.soap.mapper.GetBatchSoapMapper;
