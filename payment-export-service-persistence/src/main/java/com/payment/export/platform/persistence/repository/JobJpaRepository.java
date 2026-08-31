@@ -29,6 +29,20 @@ public interface JobJpaRepository extends JpaRepository<JobEntity, UUID> {
 											   @Param("staleUpdatedBefore") OffsetDateTime staleUpdatedBefore,
 											   @Param("limit") int limit);
 
+	@Query(value = """
+			select j.*
+			from job j
+			where j.status in (:retryableStatuses)
+			   or (j.status = :inFlightStatus and j.updated_at < :staleUpdatedBefore)
+			order by j.created_at
+			limit :limit
+			for update of j skip locked
+			""", nativeQuery = true)
+	List<JobEntity> claimEligibleForCsvGeneration(@Param("retryableStatuses") Collection<String> retryableStatuses,
+											   @Param("inFlightStatus") String inFlightStatus,
+											   @Param("staleUpdatedBefore") OffsetDateTime staleUpdatedBefore,
+											   @Param("limit") int limit);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<JobEntity> findByJobId(UUID jobId);
 }

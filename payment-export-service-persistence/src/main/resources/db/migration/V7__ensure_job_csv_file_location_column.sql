@@ -1,0 +1,3 @@
+ALTER TABLE job
+ADD COLUMN IF NOT EXISTS csv_file_location VARCHAR(1024);
+
