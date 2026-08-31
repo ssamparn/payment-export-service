@@ -9,8 +9,6 @@ import java.util.UUID;
 
 public interface TransactionsJpaRepository extends JpaRepository<TransactionEntity, UUID> {
 
-	List<TransactionEntity> findByBatch_BatchId(UUID batchId);
-
 	List<TransactionEntity> findByBatch_BatchIdAndTransactionIdIn(UUID batchId, Collection<String> transactionIds);
 
 	long countByBatch_Job_JobId(UUID jobId);

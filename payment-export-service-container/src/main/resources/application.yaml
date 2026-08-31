@@ -26,6 +26,12 @@ payment-export:
       retry-backoff-multiplier: ${PAYMENT_EXPORT_GET_TRANSACTIONS_RETRY_BACKOFF_MULTIPLIER:2.0}
       max-retry-backoff: ${PAYMENT_EXPORT_GET_TRANSACTIONS_MAX_RETRY_BACKOFF:PT10S}
       stale-processing-timeout: ${PAYMENT_EXPORT_GET_TRANSACTIONS_STALE_PROCESSING_TIMEOUT:PT15M}
+    cleanup:
+      fixed-delay: ${PAYMENT_EXPORT_CLEANUP_SCHEDULER_DELAY:3600000}
+      max-jobs-per-run: ${PAYMENT_EXPORT_CLEANUP_MAX_JOBS_PER_RUN:50}
+      max-batches-per-run: ${PAYMENT_EXPORT_CLEANUP_MAX_BATCHES_PER_RUN:200}
+      max-transactions-per-run: ${PAYMENT_EXPORT_CLEANUP_MAX_TRANSACTIONS_PER_RUN:500}
+      retention-period: ${PAYMENT_EXPORT_CLEANUP_RETENTION_PERIOD:P5D}
 
 security:
   jwt:

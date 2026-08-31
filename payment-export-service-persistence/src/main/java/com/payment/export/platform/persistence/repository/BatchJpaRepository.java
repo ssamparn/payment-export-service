@@ -23,7 +23,7 @@ public interface BatchJpaRepository extends JpaRepository<BatchEntity, UUID> {
 			where j.status in (:jobStatuses)
 			  and (b.status in (:retryableStatuses)
 				   or (b.status = :inFlightStatus and b.updated_at < :staleUpdatedBefore))
-			order by j.created_at asc, b.created_at asc
+			order by j.created_at, b.created_at
 			limit :limit
 			for update of b skip locked
 			""", nativeQuery = true)

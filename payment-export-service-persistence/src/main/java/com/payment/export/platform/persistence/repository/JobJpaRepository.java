@@ -20,7 +20,7 @@ public interface JobJpaRepository extends JpaRepository<JobEntity, UUID> {
 			from job j
 			where j.status in (:retryableStatuses)
 			   or (j.status = :inFlightStatus and j.updated_at < :staleUpdatedBefore)
-			order by j.created_at asc
+			order by j.created_at
 			limit :limit
 			for update of j skip locked
 			""", nativeQuery = true)
