@@ -29,7 +29,7 @@ public class CsvGenerationRepositoryImpl implements CsvGenerationRepository {
     private static final String STREAM_TRANSACTIONS_SQL = """
             select t.transaction_id,
                    b.internal_batch_id,
-                   t.batch_name,
+                   b.batch_name,
                    t.payment_type,
                    t.batch_status,
                    t.account_holder_name,

@@ -49,6 +49,7 @@ public class GetBatchSoapMapper {
     private GetBatchResponse.BatchDetails toDomainBatch(BatchRpy batch) {
         return new GetBatchResponse.BatchDetails(
                 batch.getBatchId(),
+                batch.getBatchName(),
                 batch.getIban(),
                 batch.getCurrencyCode(),
                 com.payment.export.platform.domain.dto.PaymentType.valueOf(batch.getPaymentType().name())

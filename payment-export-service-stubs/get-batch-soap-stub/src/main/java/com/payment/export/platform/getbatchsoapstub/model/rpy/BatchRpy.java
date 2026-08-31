@@ -11,6 +11,7 @@ import jakarta.xml.bind.annotation.XmlType;
         name = "BatchRpy",
         propOrder = {
                 "batchId",
+                "batchName",
                 "iban",
                 "currencyCode",
                 "paymentType"
@@ -20,6 +21,9 @@ public class BatchRpy {
 
     @XmlElement(required = true)
     private String batchId;
+
+    @XmlElement(required = true)
+    private String batchName;
 
     @XmlElement(required = true)
     private String iban;
@@ -36,6 +40,14 @@ public class BatchRpy {
 
     public void setBatchId(String batchId) {
         this.batchId = batchId;
+    }
+
+    public String getBatchName() {
+        return batchName;
+    }
+
+    public void setBatchName(String batchName) {
+        this.batchName = batchName;
     }
 
     public String getIban() {

@@ -46,6 +46,9 @@ public class BatchEntity {
     @Column(name = "internal_batch_id", nullable = false, length = 128)
     private String internalBatchId;
 
+    @Column(name = "batch_name", nullable = false, length = 256)
+    private String batchName;
+
     @Column(name = "iban", length = 34)
     private String iban;
 
@@ -114,6 +117,14 @@ public class BatchEntity {
 
     public void setInternalBatchId(String internalBatchId) {
         this.internalBatchId = internalBatchId;
+    }
+
+    public String getBatchName() {
+        return batchName;
+    }
+
+    public void setBatchName(String batchName) {
+        this.batchName = batchName;
     }
 
     public String getIban() {

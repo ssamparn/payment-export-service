@@ -23,6 +23,7 @@ public class BatchDataAccessMapper {
         batchEntity.setBatchId(UUID.randomUUID());
         batchEntity.setJob(jobEntity);
         batchEntity.setInternalBatchId(batch.internalBatchId());
+        batchEntity.setBatchName(batch.batchName());
         batchEntity.setIban(batch.iban());
         batchEntity.setCurrencyCode(batch.currencyCode());
         batchEntity.setPaymentType(batch.paymentType());

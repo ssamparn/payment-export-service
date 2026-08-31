@@ -1,10 +1,10 @@
 package com.payment.export.platform.getbatchsoapstub.service;
 
-import com.payment.export.platform.getbatchsoapstub.model.rpy.BatchRpy;
+import com.payment.export.platform.getbatchsoapstub.model.PaymentType;
 import com.payment.export.platform.getbatchsoapstub.model.req.AccountReq;
 import com.payment.export.platform.getbatchsoapstub.model.req.GetBatchReq;
+import com.payment.export.platform.getbatchsoapstub.model.rpy.BatchRpy;
 import com.payment.export.platform.getbatchsoapstub.model.rpy.GetBatchRpy;
-import com.payment.export.platform.getbatchsoapstub.model.PaymentType;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class MockGetBatchSoapService {
         for (int sequence = startIndex; sequence <= endIndex; sequence++) {
             BatchRpy batch = new BatchRpy();
             batch.setBatchId("INT-" + account.getCurrencyCode() + "-" + String.format("%04d", sequence));
+            batch.setBatchName(paymentType + "-" + account.getCurrencyCode() + "-BATCH-" + String.format("%04d", sequence));
             batch.setIban(account.getIban());
             batch.setCurrencyCode(account.getCurrencyCode());
             batch.setPaymentType(paymentType);

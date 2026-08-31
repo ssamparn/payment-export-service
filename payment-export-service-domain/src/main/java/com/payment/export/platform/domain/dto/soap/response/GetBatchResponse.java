@@ -24,6 +24,7 @@ public record GetBatchResponse(int page,
     }
 
     public record BatchDetails(String internalBatchId,
+                               String batchName,
                                String iban,
                                String currencyCode,
                                PaymentType paymentType) {
@@ -35,6 +36,9 @@ public record GetBatchResponse(int page,
             if (iban == null || iban.isBlank()) {
                 throw new IllegalArgumentException("iban must not be blank");
             }
+            if (batchName == null || batchName.isBlank()) {
+                throw new IllegalArgumentException("batchName must not be blank");
+            }
             if (currencyCode == null || currencyCode.isBlank()) {
                 throw new IllegalArgumentException("currencyCode must not be blank");
             }
@@ -43,6 +47,7 @@ public record GetBatchResponse(int page,
             }
 
             internalBatchId = internalBatchId.trim();
+            batchName = batchName.trim();
             iban = iban.trim();
             currencyCode = currencyCode.trim().toUpperCase();
         }
