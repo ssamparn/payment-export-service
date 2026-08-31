@@ -1,6 +1,7 @@
 package com.payment.export.platform.persistence.entity;
 
 import com.payment.export.platform.domain.dto.PaymentType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +11,7 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -17,6 +19,8 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -65,6 +69,9 @@ public class BatchEntity {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TransactionEntity> transactions = new ArrayList<>();
 
     @PrePersist
     void prePersist() {
@@ -144,6 +151,51 @@ public class BatchEntity {
 
     public Long getVersion() {
         return version;
+    }
+
+    public List<TransactionEntity> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<TransactionEntity> transactions) {
+        for (TransactionEntity transaction : this.transactions) {
+            transaction.setBatch(null);
+        }
+        this.transactions.clear();
+
+        if (transactions == null) {
+            return;
+        }
+
+        for (TransactionEntity transaction : transactions) {
+            addTransaction(transaction);
+        }
+    }
+
+    public void addTransaction(TransactionEntity transaction) {
+        if (transaction == null) {
+            return;
+        }
+
+        boolean alreadyPresent = this.transactions.stream()
+                .anyMatch(existing -> existing.getTransactionId() != null
+                        && existing.getTransactionId().equals(transaction.getTransactionId()));
+        if (alreadyPresent) {
+            return;
+        }
+
+        this.transactions.add(transaction);
+        transaction.setBatch(this);
+    }
+
+    public void removeTransaction(TransactionEntity transaction) {
+        if (transaction == null) {
+            return;
+        }
+
+        if (this.transactions.remove(transaction)) {
+            transaction.setBatch(null);
+        }
     }
 }
 
