@@ -24,6 +24,7 @@
         <lombok.version>1.18.46</lombok.version>
         <commons-collections4.version>4.6.0</commons-collections4.version>
         <iban4j.version>3.2.14-RELEASE</iban4j.version>
+        <shedlock-spring.version>7.9.0</shedlock-spring.version>
     </properties>
 
     <modules>
@@ -87,6 +88,16 @@
                 <groupId>org.iban4j</groupId>
                 <artifactId>iban4j</artifactId>
                 <version>${iban4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.javacrumbs.shedlock</groupId>
+                <artifactId>shedlock-spring</artifactId>
+                <version>${shedlock-spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.javacrumbs.shedlock</groupId>
+                <artifactId>shedlock-provider-jdbc-template</artifactId>
+                <version>${shedlock-spring.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -6,6 +6,7 @@ import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -46,7 +47,7 @@ public class GetBatchScheduler {
 		this.initialRetryBackoff = initialRetryBackoff == null || initialRetryBackoff.isNegative() || initialRetryBackoff.isZero()
 				? Duration.ofSeconds(1)
 				: initialRetryBackoff;
-		this.retryBackoffMultiplier = retryBackoffMultiplier < 1.0 ? 1.0 : retryBackoffMultiplier;
+		this.retryBackoffMultiplier = Math.max(1.0d, retryBackoffMultiplier);
 		this.maxRetryBackoff = maxRetryBackoff == null || maxRetryBackoff.isNegative() || maxRetryBackoff.isZero()
 				? Duration.ofSeconds(10)
 				: maxRetryBackoff;
@@ -56,6 +57,7 @@ public class GetBatchScheduler {
 	}
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-batch.fixed-delay:60000}")
+	@SchedulerLock(name = "GetBatchScheduler.fetchBatches")
 	public void fetchBatches() {
 		for (GetBatchJob batchJob : getBatchRepository.findJobsForBatchFetch(maxJobsPerRun, soapPageSize, staleFetchTimeout)) {
 			processJob(batchJob);
@@ -137,7 +139,7 @@ public class GetBatchScheduler {
 
 	private Duration nextBackoff(Duration currentBackoff) {
 		long nextMillis = Math.round(currentBackoff.toMillis() * retryBackoffMultiplier);
-		long boundedMillis = Math.min(Math.max(1L, nextMillis), maxRetryBackoff.toMillis());
+		long boundedMillis = Math.clamp(nextMillis, 1L, maxRetryBackoff.toMillis());
 		return Duration.ofMillis(boundedMillis);
 	}
 

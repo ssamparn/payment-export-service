@@ -6,6 +6,7 @@ import com.payment.export.platform.domain.dto.soap.response.GetTransactionsRespo
 import com.payment.export.platform.domain.ports.output.integration.soap.GetTransactionsSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetTransactionsRepository;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class GetTransactionsScheduler {
 		this.initialRetryBackoff = initialRetryBackoff == null || initialRetryBackoff.isZero() || initialRetryBackoff.isNegative()
 				? Duration.ofSeconds(1)
 				: initialRetryBackoff;
-		this.retryBackoffMultiplier = retryBackoffMultiplier < 1.0 ? 1.0 : retryBackoffMultiplier;
+		this.retryBackoffMultiplier = Math.max(1.0d, retryBackoffMultiplier);
 		this.maxRetryBackoff = maxRetryBackoff == null || maxRetryBackoff.isZero() || maxRetryBackoff.isNegative()
 				? Duration.ofSeconds(10)
 				: maxRetryBackoff;
@@ -53,6 +54,7 @@ public class GetTransactionsScheduler {
 	}
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-transactions.fixed-delay:60000}")
+	@SchedulerLock(name = "GetTransactionsScheduler.fetchTransactions")
 	public void fetchTransactions() {
 		for (GetTransactionsBatch transactionBatch : getTransactionsRepository.findBatchesForTransactionFetch(maxBatchesPerRun, soapPageSize, staleProcessingTimeout)) {
 			processBatch(transactionBatch);
@@ -116,7 +118,7 @@ public class GetTransactionsScheduler {
 
 	private Duration nextBackoff(Duration currentBackoff) {
 		long nextMillis = Math.round(currentBackoff.toMillis() * retryBackoffMultiplier);
-		long boundedMillis = Math.min(Math.max(1L, nextMillis), maxRetryBackoff.toMillis());
+		long boundedMillis = Math.clamp(nextMillis, 1L, maxRetryBackoff.toMillis());
 		return Duration.ofMillis(boundedMillis);
 	}
 
