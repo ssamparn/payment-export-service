@@ -36,10 +36,10 @@ public class JobDataAccessMapper {
     }
 
     public CreateJobResponse jobEntityToCreateJobResponse(JobEntity jobEntity) {
-        return new CreateJobResponse(jobEntity.getJobId(), mapStatus(jobEntity.getStatus()));
+        return new CreateJobResponse(jobEntity.getJobId(), toBusinessStatus(jobEntity.getStatus()));
     }
 
-    private BusinessStatus mapStatus(JobStatus status) {
+    public BusinessStatus toBusinessStatus(JobStatus status) {
         if (status == null) {
             return BusinessStatus.FAILED;
         }
