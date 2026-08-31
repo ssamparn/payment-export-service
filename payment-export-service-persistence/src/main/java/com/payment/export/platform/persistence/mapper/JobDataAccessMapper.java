@@ -51,7 +51,6 @@ public class JobDataAccessMapper {
                  BATCHES_FETCH_FAILED,
                  FETCHING_TRANSACTIONS,
                  TRANSACTIONS_FETCHED,
-                 TRANSACTION_FETCH_FAILED,
                  GENERATING_CSV_LINK,
                  GENERATING_CSV_FAILED ->
                     BusinessStatus.IN_PROGRESS;
