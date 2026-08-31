@@ -8,7 +8,16 @@ import org.springframework.stereotype.Component;
 public class GetTransactionsRequestDataAccessMapper {
 
     public GetTransactionsRequest batchEntityToGetTransactionsRequest(BatchEntity batchEntity, int pageSize) {
-        return new GetTransactionsRequest(batchEntity.getInternalBatchId(), 1, pageSize);
+        return new GetTransactionsRequest(
+                batchEntity.getInternalBatchId(),
+                Math.max(1, resolveLastTransactionPageProcessed(batchEntity) + 1),
+                pageSize
+        );
+    }
+
+    private int resolveLastTransactionPageProcessed(BatchEntity batchEntity) {
+        Integer lastTransactionPageProcessed = batchEntity.getLastTransactionPageProcessed();
+        return lastTransactionPageProcessed == null ? 0 : lastTransactionPageProcessed;
     }
 }
 

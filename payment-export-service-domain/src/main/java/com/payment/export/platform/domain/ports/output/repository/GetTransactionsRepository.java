@@ -11,7 +11,6 @@ public interface GetTransactionsRepository {
 
 	List<GetTransactionsBatch> findBatchesForTransactionFetch(int maxBatches, int pageSize, Duration staleProcessingTimeout);
 
-	boolean markBatchAsProcessing(UUID batchId, Duration staleProcessingTimeout);
 
 	void saveTransactionPage(UUID batchId, GetTransactionsResponse response);
 

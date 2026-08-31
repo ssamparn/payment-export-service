@@ -6,7 +6,6 @@ import com.payment.export.platform.domain.dto.soap.response.GetTransactionsRespo
 import com.payment.export.platform.domain.ports.output.integration.soap.GetTransactionsSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetTransactionsRepository;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -54,7 +53,6 @@ public class GetTransactionsScheduler {
 	}
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-transactions.fixed-delay:60000}")
-	@SchedulerLock(name = "GetTransactionsScheduler.fetchTransactions")
 	public void fetchTransactions() {
 		for (GetTransactionsBatch transactionBatch : getTransactionsRepository.findBatchesForTransactionFetch(maxBatchesPerRun, soapPageSize, staleProcessingTimeout)) {
 			processBatch(transactionBatch);
@@ -62,10 +60,6 @@ public class GetTransactionsScheduler {
 	}
 
 	private void processBatch(GetTransactionsBatch transactionBatch) {
-		if (!getTransactionsRepository.markBatchAsProcessing(transactionBatch.batchId(), staleProcessingTimeout)) {
-			log.debug("Skipping batch {} because it is no longer eligible for transaction fetching", transactionBatch.batchId());
-			return;
-		}
 
 		try {
 			GetTransactionsRequest currentRequest = transactionBatch.request();

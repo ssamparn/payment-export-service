@@ -13,7 +13,6 @@ import com.payment.export.platform.persistence.mapper.TransactionsDataAccessMapp
 import com.payment.export.platform.persistence.repository.BatchJpaRepository;
 import com.payment.export.platform.persistence.repository.JobJpaRepository;
 import com.payment.export.platform.persistence.repository.TransactionsJpaRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,15 +55,25 @@ public class GetTransactionsRepositoryImpl implements GetTransactionsRepository 
 	}
 
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public List<GetTransactionsBatch> findBatchesForTransactionFetch(int maxBatches, int pageSize, Duration staleProcessingTimeout) {
-		return batchJpaRepository.findEligibleForTransactionFetch(
-						JOB_STATUSES_ELIGIBLE_FOR_TRANSACTION_FETCH,
-						BATCH_FETCH_ELIGIBLE_STATUSES,
-						BatchJobStatus.PROCESSING,
-						OffsetDateTime.now().minus(resolveStaleProcessingTimeout(staleProcessingTimeout)),
-						PageRequest.of(0, maxBatches)
-				).stream()
+		List<BatchEntity> claimedBatches = batchJpaRepository.claimEligibleForTransactionFetch(
+					JOB_STATUSES_ELIGIBLE_FOR_TRANSACTION_FETCH.stream().map(JobStatus::name).toList(),
+					BATCH_FETCH_ELIGIBLE_STATUSES.stream().map(BatchJobStatus::name).toList(),
+					BatchJobStatus.PROCESSING.name(),
+					OffsetDateTime.now().minus(resolveStaleProcessingTimeout(staleProcessingTimeout)),
+					Math.max(1, maxBatches)
+				);
+
+		claimedBatches.forEach(batchEntity -> {
+			batchEntity.setStatus(BatchJobStatus.PROCESSING);
+			batchEntity.getJob().setStatus(JobStatus.FETCHING_TRANSACTIONS);
+			batchEntity.getJob().setLastError(null);
+			batchJpaRepository.save(batchEntity);
+			jobJpaRepository.save(batchEntity.getJob());
+		});
+
+		return claimedBatches.stream()
 				.map(batchEntity -> new GetTransactionsBatch(
 						batchEntity.getJob().getJobId(),
 						batchEntity.getBatchId(),
@@ -75,56 +84,37 @@ public class GetTransactionsRepositoryImpl implements GetTransactionsRepository 
 
 	@Override
 	@Transactional
-	public boolean markBatchAsProcessing(UUID batchId, Duration staleProcessingTimeout) {
-		BatchEntity batchEntity = findBatchWithLock(batchId);
-		if (!isEligibleForTransactionFetch(batchEntity, staleProcessingTimeout)) {
-			return false;
-		}
-
-		batchEntity.setStatus(BatchJobStatus.PROCESSING);
-		batchEntity.getJob().setStatus(JobStatus.FETCHING_TRANSACTIONS);
-		batchEntity.getJob().setLastError(null);
-		batchJpaRepository.save(batchEntity);
-		jobJpaRepository.save(batchEntity.getJob());
-		return true;
-	}
-
-	@Override
-	@Transactional
 	public void saveTransactionPage(UUID batchId, GetTransactionsResponse response) {
 		BatchEntity batchEntity = findBatchWithLock(batchId);
-
-		if (response.transactions().isEmpty()) {
-			return;
-		}
-
-		Set<String> existingTransactionIds = new HashSet<>(transactionsJpaRepository
-				.findByBatch_BatchIdAndTransactionIdIn(batchId, response.transactions().stream()
-						.map(GetTransactionsResponse.TransactionDetails::transactionId)
-						.toList())
-				.stream()
-				.map(TransactionEntity::getTransactionId)
-				.toList());
+		batchEntity.setLastTransactionPageProcessed(response.page());
 
 		Map<String, GetTransactionsResponse.TransactionDetails> uniqueTransactionsById = new LinkedHashMap<>();
 		response.transactions().forEach(transaction -> uniqueTransactionsById.putIfAbsent(transaction.transactionId(), transaction));
+
+		Set<String> requestedTransactionIds = uniqueTransactionsById.keySet();
+		Set<String> existingTransactionIds = requestedTransactionIds.isEmpty()
+				? Set.of()
+				: new HashSet<>(transactionsJpaRepository
+						.findByBatch_BatchIdAndTransactionIdIn(batchId, requestedTransactionIds)
+						.stream()
+						.map(TransactionEntity::getTransactionId)
+						.toList());
 
 		List<GetTransactionsResponse.TransactionDetails> newTransactions = uniqueTransactionsById.values().stream()
 				.filter(transaction -> !existingTransactionIds.contains(transaction.transactionId()))
 				.toList();
 
 		if (newTransactions.isEmpty()) {
+			batchJpaRepository.save(batchEntity);
+			refreshJobTransactionCounts(batchEntity.getJob().getJobId());
 			return;
 		}
 
 		List<TransactionEntity> transactionEntities = transactionsDataAccessMapper.toTransactionEntities(batchEntity, newTransactions);
 		transactionsJpaRepository.saveAll(transactionEntities);
 
-		int persistedTransactionCount = transactionEntities.size();
-		JobEntity jobEntity = batchEntity.getJob();
-		jobEntity.setProcessedTransactions(resolveCount(jobEntity.getProcessedTransactions()) + persistedTransactionCount);
-		jobEntity.setTotalTransactions(resolveCount(jobEntity.getTotalTransactions()) + persistedTransactionCount);
-		jobJpaRepository.save(jobEntity);
+		batchJpaRepository.save(batchEntity);
+		refreshJobTransactionCounts(batchEntity.getJob().getJobId());
 	}
 
 	@Override
@@ -150,13 +140,18 @@ public class GetTransactionsRepositoryImpl implements GetTransactionsRepository 
 	@Override
 	@Transactional
 	public void markJobAsTransactionsFetchedIfComplete(UUID jobId) {
-		JobEntity jobEntity = jobJpaRepository.findByJobId(jobId)
-				.orElseThrow(() -> new IllegalArgumentException("Job not found for id: " + jobId));
-
 		long incompleteBatches = batchJpaRepository.countIncompleteByJobId(jobId, BatchJobStatus.COMPLETED);
 
-		if (incompleteBatches == 0 && jobEntity.getStatus() != JobStatus.FAILED) {
-			jobEntity.setTotalTransactions(resolveCount(jobEntity.getProcessedTransactions()));
+		if (incompleteBatches == 0) {
+			JobEntity jobEntity = jobJpaRepository.findByJobId(jobId)
+					.orElseThrow(() -> new IllegalArgumentException("Job not found for id: " + jobId));
+
+			if (jobEntity.getStatus() == JobStatus.FAILED) {
+				return;
+			}
+
+			int persistedTransactionCount = refreshJobTransactionCounts(jobId);
+			jobEntity.setTotalTransactions(persistedTransactionCount);
 			jobEntity.setStatus(JobStatus.TRANSACTIONS_FETCHED);
 			jobEntity.setLastError(null);
 			jobJpaRepository.save(jobEntity);
@@ -173,23 +168,6 @@ public class GetTransactionsRepositoryImpl implements GetTransactionsRepository 
 		jobJpaRepository.save(jobEntity);
 	}
 
-	private boolean isEligibleForTransactionFetch(BatchEntity batchEntity, Duration staleProcessingTimeout) {
-		if (!JOB_STATUSES_ELIGIBLE_FOR_TRANSACTION_FETCH.contains(batchEntity.getJob().getStatus())) {
-			return false;
-		}
-
-		if (BATCH_FETCH_ELIGIBLE_STATUSES.contains(batchEntity.getStatus())) {
-			return true;
-		}
-
-		if (batchEntity.getStatus() != BatchJobStatus.PROCESSING) {
-			return false;
-		}
-
-		Duration effectiveTimeout = resolveStaleProcessingTimeout(staleProcessingTimeout);
-		return batchEntity.getUpdatedAt() != null && batchEntity.getUpdatedAt().isBefore(OffsetDateTime.now().minus(effectiveTimeout));
-	}
-
 	private Duration resolveStaleProcessingTimeout(Duration staleProcessingTimeout) {
 		return staleProcessingTimeout == null || staleProcessingTimeout.isZero() || staleProcessingTimeout.isNegative()
 				? Duration.ofMinutes(15)
@@ -199,6 +177,17 @@ public class GetTransactionsRepositoryImpl implements GetTransactionsRepository 
 	private BatchEntity findBatchWithLock(UUID batchId) {
 		return batchJpaRepository.findByBatchId(batchId)
 				.orElseThrow(() -> new IllegalArgumentException("Batch not found for id: " + batchId));
+	}
+
+	private int refreshJobTransactionCounts(UUID jobId) {
+		JobEntity jobEntity = jobJpaRepository.findByJobId(jobId)
+				.orElseThrow(() -> new IllegalArgumentException("Job not found for id: " + jobId));
+
+		int persistedTransactionCount = Math.toIntExact(transactionsJpaRepository.countByBatch_Job_JobId(jobId));
+		jobEntity.setProcessedTransactions(persistedTransactionCount);
+		jobEntity.setTotalTransactions(Math.max(resolveCount(jobEntity.getTotalTransactions()), persistedTransactionCount));
+		jobJpaRepository.save(jobEntity);
+		return persistedTransactionCount;
 	}
 
 	private String truncate(String value) {

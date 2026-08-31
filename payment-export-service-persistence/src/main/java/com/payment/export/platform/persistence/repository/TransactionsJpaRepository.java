@@ -12,4 +12,6 @@ public interface TransactionsJpaRepository extends JpaRepository<TransactionEnti
 	List<TransactionEntity> findByBatch_BatchId(UUID batchId);
 
 	List<TransactionEntity> findByBatch_BatchIdAndTransactionIdIn(UUID batchId, Collection<String> transactionIds);
+
+	long countByBatch_Job_JobId(UUID jobId);
 }

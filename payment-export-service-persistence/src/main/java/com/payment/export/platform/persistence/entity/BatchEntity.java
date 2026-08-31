@@ -60,6 +60,9 @@ public class BatchEntity {
     @Column(name = "status", nullable = false, length = 64)
     private BatchJobStatus status;
 
+    @Column(name = "last_transaction_page_processed", nullable = false)
+    private Integer lastTransactionPageProcessed;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -78,6 +81,10 @@ public class BatchEntity {
         OffsetDateTime now = OffsetDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+
+        if (this.lastTransactionPageProcessed == null) {
+            this.lastTransactionPageProcessed = 0;
+        }
     }
 
     @PreUpdate
@@ -139,6 +146,14 @@ public class BatchEntity {
 
     public void setStatus(BatchJobStatus status) {
         this.status = status;
+    }
+
+    public Integer getLastTransactionPageProcessed() {
+        return lastTransactionPageProcessed;
+    }
+
+    public void setLastTransactionPageProcessed(Integer lastTransactionPageProcessed) {
+        this.lastTransactionPageProcessed = lastTransactionPageProcessed;
     }
 
     public OffsetDateTime getCreatedAt() {

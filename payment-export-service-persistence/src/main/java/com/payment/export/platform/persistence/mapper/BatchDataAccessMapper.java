@@ -27,6 +27,7 @@ public class BatchDataAccessMapper {
         batchEntity.setCurrencyCode(batch.currencyCode());
         batchEntity.setPaymentType(batch.paymentType());
         batchEntity.setStatus(BatchJobStatus.CREATED);
+        batchEntity.setLastTransactionPageProcessed(0);
         return batchEntity;
     }
 }

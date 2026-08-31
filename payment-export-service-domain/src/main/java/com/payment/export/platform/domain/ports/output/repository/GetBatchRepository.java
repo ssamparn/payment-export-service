@@ -11,8 +11,6 @@ public interface GetBatchRepository {
 
     List<GetBatchJob> findJobsForBatchFetch(int maxJobs, int pageSize, Duration staleFetchTimeout);
 
-    boolean markJobAsFetchingBatches(UUID jobId, Duration staleFetchTimeout);
-
     void saveBatchPage(UUID jobId, GetBatchResponse response);
 
     void markJobAsBatchesFetched(UUID jobId);

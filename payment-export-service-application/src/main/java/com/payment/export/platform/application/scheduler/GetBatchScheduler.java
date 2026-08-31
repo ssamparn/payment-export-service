@@ -6,7 +6,6 @@ import com.payment.export.platform.domain.dto.soap.response.GetBatchResponse;
 import com.payment.export.platform.domain.ports.output.integration.soap.GetBatchSoapService;
 import com.payment.export.platform.domain.ports.output.repository.GetBatchRepository;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -57,7 +56,6 @@ public class GetBatchScheduler {
 	}
 
 	@Scheduled(fixedDelayString = "${payment-export.scheduler.get-batch.fixed-delay:60000}")
-	@SchedulerLock(name = "GetBatchScheduler.fetchBatches")
 	public void fetchBatches() {
 		for (GetBatchJob batchJob : getBatchRepository.findJobsForBatchFetch(maxJobsPerRun, soapPageSize, staleFetchTimeout)) {
 			processJob(batchJob);
@@ -67,10 +65,6 @@ public class GetBatchScheduler {
 	private void processJob(GetBatchJob batchJob) {
 		GetBatchRequest initialRequest = batchJob.request();
 		var jobId = batchJob.jobId();
-		if (!getBatchRepository.markJobAsFetchingBatches(jobId, staleFetchTimeout)) {
-			log.debug("Skipping job {} because it is no longer eligible for batch fetching", jobId);
-			return;
-		}
 
 		try {
 			if (batchJob.isBatchFetchComplete()) {
